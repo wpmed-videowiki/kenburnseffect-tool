@@ -1,11 +1,12 @@
 "use server";
-import {getServerSession} from 'next-auth'
-// import { getToken } from 'next-auth/jwt';
+import { cookies } from "next/headers";
+const PLAYER_IMAGE_WIDTH = 720;
 
-const PLAYER_IMAGE_WIDTH = 1280;
-
-export const fetchCommonsImage = async (fileName) => {
-  const infoUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+export const fetchCommonsImage = async (
+  fileName,
+  wikiSource = "https://commons.wikimedia.org"
+) => {
+  const infoUrl = `${wikiSource}/w/api.php?action=query&titles=${encodeURIComponent(
     fileName
   )}&prop=imageinfo&iiprop=url|mediatype|size&iiurlwidth=${PLAYER_IMAGE_WIDTH}&format=json&formatversion=2`;
 
@@ -13,12 +14,18 @@ export const fetchCommonsImage = async (fileName) => {
   const data = await response.json();
   const pages = data.query.pages;
   const page = pages[0];
-  const imageInfo = page.imageinfo[0];
-  return imageInfo;
+  return page;
 };
 
-export const commonsAction = async (action, params) => {
-    const session = await getServerSession();
-    console.log('server session', {session});
-// const token = await getToken({req, secret: process.env.SECRET});
-}
+export const uploadFile = async (data) => {
+  const req = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/upload`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: (await cookies()).toString(),
+    },
+    body: JSON.stringify(data),
+  });
+  const response = await req.json();
+  return response;
+};

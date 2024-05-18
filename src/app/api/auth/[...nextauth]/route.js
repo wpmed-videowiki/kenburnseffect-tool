@@ -8,29 +8,49 @@ export const authOptions = {
         "https://commons.wikimedia.org/w/rest.php/oauth2/resource/profile",
       authorization: {
         url: "https://commons.wikimedia.org/w/rest.php/oauth2/authorize",
-        params: { scope: "" },
       },
       clientId: process.env.MEDIAWIKI_CONSUMER_KEY,
       clientSecret: process.env.MEDIAWIKI_CONSUMER_SECRET,
+      name: "Commons",
+      id: "wikimedia",
+    }),
+    WikimediaProvider({
+      token: "https://nccommons.org/w/rest.php/oauth2/access_token",
+      userinfo: "https://nccommons.org/w/rest.php/oauth2/resource/profile",
+      authorization: {
+        url: "https://nccommons.org/w/rest.php/oauth2/authorize",
+      },
+      client: {
+        client_id: process.env.NCCOMMONS_CONSUMER_KEY,
+        client_secret: process.env.NCCOMMONS_CONSUMER_SECRET,
+      },
+      accessTokenUrl: "https://nccommons.org/w/rest.php/oauth2/access_token",
+      requestTokenUrl: "https://nccommons.org/w/rest.php/oauth2/request_token",
+      clientId: process.env.NCCOMMONS_CONSUMER_KEY,
+      clientSecret: process.env.NCCOMMONS_CONSUMER_KEY,
+      name: "NC Commons",
+      id: "nccommons",
     }),
   ],
   callbacks: {
     async jwt({ token, account }) {
-      console.log('jwt', {token, account})
       if (account) {
         token = Object.assign({}, token, {
           access_token: account.access_token,
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
         });
       }
       return token;
     },
     async session({ session, token }) {
-      console.log('session', {session, token})
       if (session) {
         session = Object.assign({}, session, {
-          access_token: token.access_token,
+          provider: token.provider,
+          providerName:
+            token.provider === "nccommons" ? "NC Commons" : "Wikimedia Commons",
+          providerAccountId: token.providerAccountId,
         });
-        console.log(session);
       }
       return session;
     },

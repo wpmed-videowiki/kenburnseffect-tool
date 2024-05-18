@@ -17,12 +17,15 @@
     "kenburns": "^2.0.3",
     "next": "14.2.3",
     "next-auth": "^4.24.7",
+    "node-fetch": "^3.3.2",
     "react": "^18",
     "react-dom": "^18",
     "react-image-crop": "^11.0.5",
-    "rect-crop": "^0.0.0"
+    "rect-crop": "^0.0.0",
+    "request": "^2.88.2"
   },
   "devDependencies": {
+    "@types/node": "20.12.12",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",
