@@ -11,7 +11,6 @@ export const fetchCSRFToken = async (baseUrl, token) => {
   });
 
   const jsonData = await data.json();
-  console.log(JSON.stringify({ jsonData }));
   return jsonData.query.tokens.csrftoken;
 };
 

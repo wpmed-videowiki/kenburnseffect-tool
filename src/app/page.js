@@ -85,6 +85,7 @@ export default function Home() {
     setPlaying(true);
     setTimeout(() => {
       setPlaying(false);
+      setCreatingVideo(false);
     }, duration + 500);
   };
 
@@ -176,7 +177,6 @@ export default function Home() {
         searchParams.get("wikiSource")
       );
       const image = await loadCrossOriginImage(page.imageinfo[0].url);
-      console.log({ page });
       setImageUrl(page.imageinfo[0].url);
       setPage(page);
       setImage(image);
@@ -287,7 +287,7 @@ export default function Home() {
                     label="duration (ms)"
                     id="duration"
                     value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
+                    onChange={(e) => setDuration(parseInt(e.target.value))}
                   />
                 </Stack>
                 <Stack direction="row" spacing={2} justifyContent="center">

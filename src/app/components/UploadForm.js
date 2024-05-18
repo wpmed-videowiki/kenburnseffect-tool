@@ -41,20 +41,20 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
     date: new Date().toISOString().split("T")[0],
     source: `${wikiSource}/wiki/${title}`,
     author: `See [${wikiSource}/wiki/${title} original file] for the list of authors.`,
-    license: `{{self|cc-by-sa-4.0}}`,
+    license: `cc-by-sa-4.0`,
   });
 
   const onFieldUpdate = (e) => {
-    setFormValues({
-      ...formValues,
+    setFormValues((state) => ({
+      ...state,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const onUpload = async () => {
     setLoading(true);
     try {
-      const response = await uploadFile({
+      const data = {
         filename: `File:${formValues.title}.webm`,
         text: getWikiPageText({
           description: formValues.title,
@@ -65,7 +65,8 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
         }),
         file: video,
         wikiSource: wikiSource,
-      });
+      };
+      const response = await uploadFile(data);
       onUploaded(response.imageinfo);
     } catch (err) {
       console.log(err);
@@ -119,18 +120,17 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
         <Stack spacing={1}>
           <Typography variant="body2">License</Typography>
           <Select
+            value={formValues.license}
             disablePortal
-            options={[...ownworkLicenceOptions, ...othersworkLicenceOptions]}
             size="small"
             name="license"
+            onChange={(e) => onFieldUpdate(e)}
           >
-            {[...ownworkLicenceOptions, ...othersworkLicenceOptions].map(
-              (option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label} ({option.value})
-                </MenuItem>
-              )
-            )}
+            {othersworkLicenceOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label} ({option.value})
+              </MenuItem>
+            ))}
           </Select>
         </Stack>
         <Button

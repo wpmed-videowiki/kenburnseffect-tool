@@ -1,26 +1,3 @@
-export const ownworkLicenceOptions = [
-  {
-    label: "Creative Commons Attribution ShareAlike 4.0 ",
-    value: "cc-by-sa-4.0",
-  },
-  {
-    label: "Creative Commons Attribution ShareAlike 3.0",
-    value: "cc-by-sa-3.0",
-  },
-  {
-    label: "Creative Commons Attribution 4.0",
-    value: "cc-by-4.0",
-  },
-  {
-    label: "Creative Commons Attribution 3.0",
-    value: "cc-by-3.0",
-  },
-  {
-    label: "Creative Commons CC0 Waiver",
-    value: "cc-zero",
-  },
-];
-
 export const othersworkLicenceOptions = [
   {
     label: "Creative Commons Attribution ShareAlike 4.0 ",
@@ -29,10 +6,6 @@ export const othersworkLicenceOptions = [
   {
     label: "Creative Commons Attribution ShareAlike 3.0",
     value: "cc-by-sa-3.0",
-  },
-  {
-    label: "Creative Commons Attribution ShareAlike 2.5",
-    value: "cc-by-sa-2.5",
   },
   {
     label: "Creative Commons Attribution ShareAlike 2.5",
@@ -63,12 +36,6 @@ export const othersworkLicenceOptions = [
   {
     label: "Creative Commons Attribution 2.0",
     value: "cc-by-2.0",
-  },
-  {
-    label: "Original work of the US Federal Government",
-    section:
-      "The copyright holder published their photo or video on Flickr with the right license",
-    value: "pd-usgov",
   },
   {
     label: "First published in the United States before 1923",
