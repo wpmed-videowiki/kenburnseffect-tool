@@ -15,6 +15,8 @@ import {
   othersworkLicenceOptions,
   ownworkLicenceOptions,
 } from "../utils/licenceOptions";
+import { useSession } from "next-auth/react";
+import { popupCenter } from "../utils/popupTools";
 
 const getWikiPageText = ({ description, source, date, license, author }) =>
   `
@@ -31,10 +33,13 @@ author=${author}
 
 `.trim();
 const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
+  const { data: session } = useSession();
+
   const fileTitleParts = title.split(".");
   fileTitleParts.pop();
   const fileTitle = fileTitleParts.join(".") + "(KenBurns)";
 
+  const provider = wikiSource.includes("mdwiki.org") ? "nccommons" : "commons";
   const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState({
     title: fileTitle,
@@ -65,6 +70,7 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
         }),
         file: video,
         wikiSource: wikiSource,
+        provider,
       };
       const response = await uploadFile(data);
       onUploaded(response.imageinfo);
@@ -73,6 +79,55 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
     }
     setLoading(false);
   };
+
+  switch (provider) {
+    case "commons":
+      if (!session?.user?.wikimediaId) {
+        return (
+          <>
+            <Typography variant="body2">
+              Please sign in with Wikimedia to upload this file.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{
+                minWidth: 200,
+              }}
+              startIcon={<UploadFile />}
+              onClick={() => popupCenter("/login?provider=wikimedia", "Login")}
+            >
+              Login to Wikimedia
+            </Button>
+          </>
+        );
+      }
+      break;
+    case "nccommons":
+      if (!session?.user?.nccommonsId) {
+        return (
+          <>
+            <Typography variant="body2">
+              Please sign in with NC Commons to upload this file.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{
+                minWidth: 200,
+              }}
+              startIcon={<UploadFile />}
+              onClick={() => popupCenter("/login?provider=nccommons", "Login")}
+            >
+              Login to NC Commons
+            </Button>
+          </>
+        );
+      }
+      break;
+    default:
+      break;
+  }
 
   return (
     <Stack>
@@ -143,7 +198,11 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
           onClick={onUpload}
           disabled={loading || disabled}
         >
-          {loading ? "Uploading..." : "Upload to Commons"}
+          {loading
+            ? "Uploading..."
+            : `Upload to ${
+                provider === "nccommons" ? "NC Commons" : "Wikimedia Commons"
+              }`}
         </Button>
       </Stack>
     </Stack>

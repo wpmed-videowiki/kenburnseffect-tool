@@ -1,5 +1,8 @@
 "use server";
 import { cookies } from "next/headers";
+import UserModel from "../models/User";
+import connectDB from "../api/lib/connectDB";
+import { updateArticleText } from "../api/utils/uploadUtils";
 const PLAYER_IMAGE_WIDTH = 720;
 
 export const fetchCommonsImage = async (fileName, wikiSource) => {
@@ -31,6 +34,22 @@ export const fetchPageSource = async (wikiSource) => {
   const pages = data.query.pages;
   const page = pages[0];
   return page;
+};
+
+export const updatePageSource = async (wikiSource, text) => {
+  await connectDB();
+
+  const appUserId = cookies().get("app-user-id")?.value;
+  const user = await UserModel.findById(appUserId);
+
+  const baseUrl = `${wikiSource.split("/wiki/")[0]}/w/api.php`;
+  const title = wikiSource.split("/wiki/")[1];
+  const token = baseUrl.includes("mdwiki.org")
+    ? user.mdwikiToken
+    : user.wikimediaToken;
+
+  const result = await updateArticleText(baseUrl, token, { title, text });
+  return result;
 };
 
 export const uploadFile = async (data) => {

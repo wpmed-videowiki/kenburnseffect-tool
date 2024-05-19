@@ -25,6 +25,7 @@ import UploadForm from "./components/UploadForm";
 import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
 import { getAppUser } from "./actions/auth";
+import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 
 const DEFAULT_IMAGE_WIDTH = 720;
 const DEFAULT_IMAGE_HEIGHT = 480;
@@ -352,10 +353,19 @@ export default function Home() {
                 </>
               )}
               {uploadedUrl && (
-                <Stack>
+                <Stack
+                  justifyContent="center"
+                  alignItems="center"
+                  width="100%"
+                  spacing={2}
+                >
                   <a href={uploadedUrl} target="_blank" rel="noreferrer">
                     View on Commons
                   </a>
+                  <UpdateArticleSourceForm
+                    wikiSource={searchParams.get("wikiSource")}
+                    fileName={uploadedUrl.split("/").pop()}
+                  />
                 </Stack>
               )}
             </Stack>
