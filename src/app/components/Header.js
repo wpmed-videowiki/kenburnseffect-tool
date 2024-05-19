@@ -54,7 +54,7 @@ const Header = () => {
           >
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="h1" color="white !important" fontSize="24px">
-                KenBurns Effect Tool
+                Ken Burns Effect Tool
               </Typography>
             </Stack>
           </Stack>
