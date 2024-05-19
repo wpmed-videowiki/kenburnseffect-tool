@@ -18,7 +18,7 @@ export const POST = async (req, res) => {
   fs.writeFileSync(`./${fileId}.webm`, fileBuffer);
   const fileStream = fs.createReadStream(`./${fileId}.webm`);
 
-  const baseUrl = wikiSource.includes("nccommons.org")
+  const baseUrl = wikiSource.includes("mdwiki.org")
     ? NCCOMMONS_BASE_URL
     : COMMONS_BASE_URL;
 

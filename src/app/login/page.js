@@ -1,14 +1,19 @@
 "use client";
 import { signIn, useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 const LoginPage = () => {
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    if (!(status === "loading") && !session) void signIn();
-    if (session) window.close();
-  }, [session, status]);
+    const provider = searchParams.get("provider");
+    if (session?.user[`${provider}Id`]) {
+      return window.close();
+    }
+    signIn(searchParams.get("provider") || "");
+  }, [session, status, searchParams.get("provider")]);
 
   return (
     <div

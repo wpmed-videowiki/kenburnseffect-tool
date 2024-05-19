@@ -19,11 +19,12 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useSearchParams } from "next/navigation";
-import { fetchCommonsImage } from "./actions/commons";
+import { fetchCommonsImage, fetchPageSource } from "./actions/commons";
 import { loadCrossOriginImage } from "./utils/loadCrossOriginImage";
 import UploadForm from "./components/UploadForm";
 import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
+import { getAppUser } from "./actions/auth";
 
 const DEFAULT_IMAGE_WIDTH = 720;
 const DEFAULT_IMAGE_HEIGHT = 480;
@@ -172,6 +173,7 @@ export default function Home() {
 
   useEffect(() => {
     async function init() {
+      await getAppUser();
       const page = await fetchCommonsImage(
         searchParams.get("file"),
         searchParams.get("wikiSource")
@@ -345,10 +347,7 @@ export default function Home() {
                     video={videoBase64}
                     onUploaded={onUploaded}
                     disabled={playing}
-                    wikiSource={
-                      searchParams.get("wikiSource") ||
-                      "https://commons.wikimedia.org"
-                    }
+                    wikiSource={searchParams.get("wikiSource")}
                   />
                 </>
               )}
