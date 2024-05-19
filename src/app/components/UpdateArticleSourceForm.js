@@ -5,6 +5,7 @@ import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import { useSession } from "next-auth/react";
 import { Login } from "@mui/icons-material";
 import { popupCenter } from "../utils/popupTools";
+import { toast } from "react-toastify";
 
 const UpdateArticleSourceForm = ({ wikiSource, fileName }) => {
   const { data: session } = useSession();
@@ -27,6 +28,7 @@ const UpdateArticleSourceForm = ({ wikiSource, fileName }) => {
     // update page source
     try {
       await updatePageSource(wikiSource, originalPageSource);
+      toast.success("Page source updated successfully");
     } catch (err) {
       console.log(err);
     }

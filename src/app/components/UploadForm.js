@@ -17,6 +17,7 @@ import {
 } from "../utils/licenceOptions";
 import { useSession } from "next-auth/react";
 import { popupCenter } from "../utils/popupTools";
+import { toast } from "react-toastify";
 
 const getWikiPageText = ({ description, source, date, license, author }) =>
   `
@@ -74,6 +75,7 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
       };
       const response = await uploadFile(data);
       onUploaded(response.imageinfo);
+      toast.success("File uploaded successfully");
     } catch (err) {
       console.log(err);
     }
