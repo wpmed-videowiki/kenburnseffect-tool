@@ -14,6 +14,7 @@ import {
   Grid,
   Typography,
   Container,
+  Modal,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -29,6 +30,8 @@ import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 
 const DEFAULT_IMAGE_WIDTH = 720;
 const DEFAULT_IMAGE_HEIGHT = 480;
+const DEFAULT_CANVAS_WIDTH = 1280;
+const DEFAULT_CANVAS_HEIGHT = 720;
 
 const easing = bezierEasing(0, 0, 1, 1);
 
@@ -53,6 +56,10 @@ export default function Home() {
   const [uploadedUrl, setUploadedUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [canvasDimensions, setCanvasDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [imageDimensions, setImageDimensions] = useState({
     width: 0,
     height: 0,
   });
@@ -174,6 +181,17 @@ export default function Home() {
 
   useEffect(() => {
     async function init() {
+      const fileName = searchParams.get("file");
+      if (!fileName) {
+        return;
+      }
+      if (!fileName.includes("File:")) {
+        // redirect to include File: prefix with all search params
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set("file", `File:${fileName}`);
+        window.location.href = newUrl.href;
+        return;
+      }
       await getAppUser();
       const page = await fetchCommonsImage(
         searchParams.get("file"),
@@ -345,10 +363,18 @@ export default function Home() {
                 <>
                   <UploadForm
                     title={page?.title.replace(/\s/g, "_").replace("File:", "")}
+                    license={page?.imageinfo[0].extmetadata.License?.value}
                     video={videoBase64}
                     onUploaded={onUploaded}
                     disabled={playing}
                     wikiSource={searchParams.get("wikiSource")}
+                    provider={
+                      page?.imageinfo[0].descriptionurl.includes(
+                        "nccommons.org"
+                      )
+                        ? "nccommons"
+                        : "commons"
+                    }
                   />
                 </>
               )}
@@ -364,6 +390,7 @@ export default function Home() {
                   </a>
                   <UpdateArticleSourceForm
                     wikiSource={searchParams.get("wikiSource")}
+                    originalFileName={searchParams.get("file")}
                     fileName={uploadedUrl.split("/").pop()}
                   />
                 </Stack>

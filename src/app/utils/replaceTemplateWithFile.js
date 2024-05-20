@@ -1,6 +1,12 @@
-export const replaceTemplateWithFile = (pageText, fileName) => {
-  const pattern = /\{\{Ken Burns effect\n\|FileName\s*=\s*File:[^\n]+\n\}\}/;
-  const replacement = `[[${fileName}|100px|left]]`;
+export const replaceTemplateWithFile = (
+  pageText,
+  originalFileName,
+  targetFileName
+) => {
+  const regex = new RegExp(
+    `\\{\\{Ken Burns effect\\n\\|FileName\\s*=\\s*(File:)?${originalFileName.replace('File:', '')}\\n\\}\\}`
+  );
+  const replacement = `[[${targetFileName}|100px|left]]`;
 
-  return pageText.replace(pattern, replacement);
+  return pageText.replace(regex, replacement);
 };

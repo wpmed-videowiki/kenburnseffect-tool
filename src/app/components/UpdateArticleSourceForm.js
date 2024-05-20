@@ -7,7 +7,7 @@ import { Login } from "@mui/icons-material";
 import { popupCenter } from "../utils/popupTools";
 import { toast } from "react-toastify";
 
-const UpdateArticleSourceForm = ({ wikiSource, fileName }) => {
+const UpdateArticleSourceForm = ({ wikiSource, originalFileName, fileName }) => {
   const { data: session } = useSession();
 
   const [originalPageSource, setOriginalPageSource] = useState("");
@@ -18,7 +18,7 @@ const UpdateArticleSourceForm = ({ wikiSource, fileName }) => {
   const onGetPageSource = async () => {
     const page = await fetchPageSource(wikiSource);
     const text = page.revisions[0].content;
-    const updatedText = replaceTemplateWithFile(text, fileName);
+    const updatedText = replaceTemplateWithFile(text, originalFileName, fileName);
 
     setOriginalPageSource(updatedText);
   };

@@ -22,16 +22,14 @@ export const POST = async (req, res) => {
 
   const baseUrl =
     provider === "nccommons" ? NCCOMMONS_BASE_URL : COMMONS_BASE_URL;
+  const token =
+    provider === "nccommons" ? user.nccommonsToken : user.wikimediaToken;
 
-  const response = await uploadFileToCommons(
-    baseUrl,
-    user[`${provider}Token`],
-    {
-      filename,
-      text,
-      file: fileStream,
-    }
-  );
+  const response = await uploadFileToCommons(baseUrl, token, {
+    filename,
+    text,
+    file: fileStream,
+  });
   await fs.unlinkSync(`./${fileId}.webm`);
   return NextResponse.json(response);
 };

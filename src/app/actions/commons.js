@@ -3,20 +3,30 @@ import { cookies } from "next/headers";
 import UserModel from "../models/User";
 import connectDB from "../api/lib/connectDB";
 import { updateArticleText } from "../api/utils/uploadUtils";
-const PLAYER_IMAGE_WIDTH = 720;
+const PLAYER_IMAGE_WIDTH = 1280;
+const COMMONS_BASE_URL = "https://commons.wikimedia.org/w/api.php";
+const NCCOMMONS_BASE_URL = "https://nccommons.org/w/api.php";
+
+const getFetchImageUrl = (baseUrl, fileName) =>
+  `${baseUrl}/w/api.php?action=query&titles=${encodeURIComponent(
+    fileName
+  )}&prop=imageinfo&iiprop=url|mediatype|size|extmetadata&iiurlwidth=${PLAYER_IMAGE_WIDTH}&format=json&formatversion=2`;
 
 export const fetchCommonsImage = async (fileName, wikiSource) => {
-  const baseUrl = wikiSource.includes("mdwiki.org")
-    ? "https://nccommons.org"
-    : "https://commons.wikimedia.org";
-  const infoUrl = `${baseUrl}/w/api.php?action=query&titles=${encodeURIComponent(
-    fileName
-  )}&prop=imageinfo&iiprop=url|mediatype|size&iiurlwidth=${PLAYER_IMAGE_WIDTH}&format=json&formatversion=2`;
+  let infoUrl = getFetchImageUrl(COMMONS_BASE_URL, fileName);
 
-  const response = await fetch(infoUrl);
-  const data = await response.json();
-  const pages = data.query.pages;
-  const page = pages[0];
+  let response = await fetch(infoUrl);
+  let data = await response.json();
+  let pages = data.query.pages;
+  let page = pages[0];
+  if (page.missing) {
+    infoUrl = getFetchImageUrl(NCCOMMONS_BASE_URL, fileName);
+    response = await fetch(infoUrl);
+    data = await response.json();
+    pages = data.query.pages;
+    page = pages[0];
+  }
+
   return page;
 };
 

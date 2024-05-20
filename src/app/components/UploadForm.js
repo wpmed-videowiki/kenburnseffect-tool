@@ -33,22 +33,38 @@ author=${author}
 {{${license.toUpperCase()}}}
 
 `.trim();
-const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
+const UploadForm = ({
+  title,
+  license,
+  video,
+  wikiSource,
+  provider,
+  onUploaded,
+  disabled,
+}) => {
   const { data: session } = useSession();
 
   const fileTitleParts = title.split(".");
   fileTitleParts.pop();
   const fileTitle = fileTitleParts.join(".") + "(KenBurns)";
 
-  const provider = wikiSource.includes("mdwiki.org") ? "nccommons" : "commons";
   const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState({
     title: fileTitle,
     date: new Date().toISOString().split("T")[0],
-    source: `${wikiSource}/wiki/${title}`,
-    author: `See [${wikiSource}/wiki/${title} original file] for the list of authors.`,
-    license: `cc-by-sa-4.0`,
+    source: `${
+      provider === "commons"
+        ? "https://commons.wikimedia.org"
+        : "https://nccommons.org"
+    }/wiki/File:${title}`,
+    author: `See [${
+      provider === "commons"
+        ? "https://commons.wikimedia.org"
+        : "https://nccommons.org"
+    }/wiki/File:${title} original file] for the list of authors.`,
+    license: license,
   });
+  console.log({license})
 
   const onFieldUpdate = (e) => {
     setFormValues((state) => ({
@@ -86,7 +102,7 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
     case "commons":
       if (!session?.user?.wikimediaId) {
         return (
-          <>
+          <Stack spacing={1}>
             <Typography variant="body2">
               Please sign in with Wikimedia to upload this file.
             </Typography>
@@ -101,14 +117,14 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
             >
               Login to Wikimedia
             </Button>
-          </>
+          </Stack>
         );
       }
       break;
     case "nccommons":
       if (!session?.user?.nccommonsId) {
         return (
-          <>
+          <Stack spacing={1}>
             <Typography variant="body2">
               Please sign in with NC Commons to upload this file.
             </Typography>
@@ -123,7 +139,7 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
             >
               Login to NC Commons
             </Button>
-          </>
+          </Stack>
         );
       }
       break;
@@ -176,19 +192,12 @@ const UploadForm = ({ title, video, wikiSource, onUploaded, disabled }) => {
         </Stack>
         <Stack spacing={1}>
           <Typography variant="body2">License</Typography>
-          <Select
-            value={formValues.license}
-            disablePortal
-            size="small"
+          <TextField
             name="license"
-            onChange={(e) => onFieldUpdate(e)}
-          >
-            {othersworkLicenceOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label} ({option.value})
-              </MenuItem>
-            ))}
-          </Select>
+            value={formValues.license}
+            onChange={onFieldUpdate}
+            size="small"
+          />
         </Stack>
         <Button
           variant="contained"
