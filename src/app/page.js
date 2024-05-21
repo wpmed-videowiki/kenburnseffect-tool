@@ -27,9 +27,10 @@ import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
 import { getAppUser } from "./actions/auth";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
+import { convert } from "./actions/convert";
 
-const DEFAULT_IMAGE_WIDTH = 720;
-const DEFAULT_IMAGE_HEIGHT = 480;
+const DEFAULT_IMAGE_WIDTH = 1280;
+const DEFAULT_IMAGE_HEIGHT = 720;
 const DEFAULT_CANVAS_WIDTH = 1280;
 const DEFAULT_CANVAS_HEIGHT = 720;
 
@@ -80,6 +81,7 @@ export default function Home() {
     };
   };
 
+  console.log({ page });
   const onApplyEffect = async () => {
     effectRef.current?.animate(
       image,
@@ -96,27 +98,43 @@ export default function Home() {
       setPlaying(false);
       setCreatingVideo(false);
     }, duration + 500);
+    // await convert({
+    //   fileUrl: page.imageinfo[0].url,
+    //   endCrop: {
+    //     x: endCrop.x / imageRef.current.width,
+    //     y: endCrop.y / imageRef.current.height,
+    //     width: endCrop.width / imageRef.current.width,
+    //     height: endCrop.height / imageRef.current.height,
+    //   },
+    //   duration,
+    // });
   };
 
   const createAndDownloadVideo = useCallback(() => {
     const stream = canvasRef.current.captureStream();
-    const recorder = new MediaRecorder(stream);
+    const recorder = new MediaRecorder(stream, {
+      type: "video/webm",
+      bitsPerSecond: 2500000,
+      mimeType: "video/webm; codecs=vp9",
+      videoBitsPerSecond: 2500000,
+    });
     const chunks = [];
 
-    recorder.ondataavailable = (e) => chunks.push(e.data);
-
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: "video/webm" });
-      const url = URL.createObjectURL(blob);
+    recorder.addEventListener("dataavailable", (e) => {
+      const url = URL.createObjectURL(e.data);
       setVideoUrl(url);
-      blobToBase64(blob)
-        .then((base64) => {
-          setVideoBase64(base64);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    };
+      // blobToBase64(blob)
+      //   .then((base64) => {
+      //     setVideoBase64(base64);
+      //   })
+      //   .catch((err) => {
+      //     console.error(err);
+      //   });
+    });
+
+    // recorder.onstop = () => {
+    //   const blob = new Blob(chunks, );
+    // };
 
     recorder.start();
     setTimeout(() => {
