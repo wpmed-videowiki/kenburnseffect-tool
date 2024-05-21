@@ -232,7 +232,7 @@ export default function Home() {
       <Header />
       <Container maxWidth="xl">
         <Grid container columnSpacing={4} rowSpacing={0} marginTop={11}>
-          <Grid item xs={8}>
+          <Grid item xs={12} md={8}>
             <Stack alignItems="center" spacing={1} position="relative">
               <canvas
                 ref={canvasRef}
@@ -274,7 +274,7 @@ export default function Home() {
               </Box>
             </Stack>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={12} md={4}>
             <Stack spacing={5}>
               <Stack spacing={1}>
                 <Typography variant="body1">How does it work?</Typography>
@@ -296,7 +296,7 @@ export default function Home() {
                 <Stack direction="row" spacing={2}>
                   <Button
                     variant="contained"
-                    color={cropType === "start" ? "inherit" : "primary"}
+                    color={cropType === "start" ? "primary" : "inherit"}
                     sx={{
                       minWidth: 150,
                     }}
@@ -306,7 +306,7 @@ export default function Home() {
                   </Button>
                   <Button
                     variant="contained"
-                    color={cropType === "end" ? "inherit" : "primary"}
+                    color={cropType === "end" ? "primary" : "inherit"}
                     sx={{
                       minWidth: 150,
                     }}
