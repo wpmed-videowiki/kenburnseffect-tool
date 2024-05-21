@@ -1,41 +1,37 @@
-import {
-  Autocomplete,
-  Button,
-  Input,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Button, Stack, TextField, Typography } from "@mui/material";
 import { uploadFile } from "../actions/commons";
 import { useState } from "react";
 import { UploadFile } from "@mui/icons-material";
-import {
-  othersworkLicenceOptions,
-  ownworkLicenceOptions,
-} from "../utils/licenceOptions";
 import { useSession } from "next-auth/react";
 import { popupCenter } from "../utils/popupTools";
 import { toast } from "react-toastify";
 
-const getWikiPageText = ({ description, source, date, license, author }) =>
+const getWikiPageText = ({
+  description,
+  source,
+  date,
+  license,
+  author,
+  permission,
+}) =>
   `
 == {{int:filedesc}} ==
-{{Information|
-description=${description}|
-date=${date}|
-source=${source}|
-author=${author}
+{{Information
+|Description=${description}
+|Date=${date}
+|Source=${source}
+|Permission=${permission}
+|Author=${author}
 }}
 
-=={{int:license}}==
-{{${license.toUpperCase()}}}
+== {{int:license-header}} ==
+{{${license}}}
 
 `.trim();
 const UploadForm = ({
   title,
   license,
+  permission,
   video,
   wikiSource,
   provider,
@@ -46,45 +42,56 @@ const UploadForm = ({
 
   const fileTitleParts = title.split(".");
   fileTitleParts.pop();
-  const fileTitle = fileTitleParts.join(".") + "(KenBurns)";
+  const tmpFileTitle = fileTitleParts.join(".") + "(KenBurns)";
 
   const [loading, setLoading] = useState(false);
-  const [formValues, setFormValues] = useState({
-    title: fileTitle,
-    date: new Date().toISOString().split("T")[0],
-    source: `${
-      provider === "commons"
-        ? "https://commons.wikimedia.org"
-        : "https://nccommons.org"
-    }/wiki/File:${title}`,
-    author: `See [${
-      provider === "commons"
-        ? "https://commons.wikimedia.org"
-        : "https://nccommons.org"
-    }/wiki/File:${title} original file] for the list of authors.`,
-    license: license,
-  });
-  console.log({license})
+  const [fileTitle, setFileTitle] = useState(tmpFileTitle);
+  const [text, setText] = useState(
+    getWikiPageText({
+      description: fileTitle,
+      date: new Date().toISOString().split("T")[0],
+      source: `${
+        provider === "commons"
+          ? "https://commons.wikimedia.org"
+          : "https://nccommons.org"
+      }/wiki/File:${title}`,
+      author: `See [${
+        provider === "commons"
+          ? "https://commons.wikimedia.org"
+          : "https://nccommons.org"
+      }/wiki/File:${title} original file] for the list of authors.`,
+      license: license,
+      permission,
+    })
+  );
 
-  const onFieldUpdate = (e) => {
-    setFormValues((state) => ({
-      ...state,
-      [e.target.name]: e.target.value,
-    }));
+  const resetPageText = () => {
+    setText(
+      getWikiPageText({
+        description: fileTitle,
+        date: new Date().toISOString().split("T")[0],
+        source: `${
+          provider === "commons"
+            ? "https://commons.wikimedia.org"
+            : "https://nccommons.org"
+        }/wiki/File:${title}`,
+        author: `See [${
+          provider === "commons"
+            ? "https://commons.wikimedia.org"
+            : "https://nccommons.org"
+        }/wiki/File:${title} original file] for the list of authors.`,
+        license: license,
+        permission,
+      })
+    );
   };
 
   const onUpload = async () => {
     setLoading(true);
     try {
       const data = {
-        filename: `File:${formValues.title}.webm`,
-        text: getWikiPageText({
-          description: formValues.title,
-          source: formValues.source,
-          date: formValues.date,
-          license: formValues.license,
-          author: formValues.author,
-        }),
+        filename: `File:${fileTitle}.webm`,
+        text,
         file: video,
         wikiSource: wikiSource,
         provider,
@@ -148,57 +155,40 @@ const UploadForm = ({
   }
 
   return (
-    <Stack>
-      <Stack direction="column" spacing={2}>
-        <Stack spacing={1}>
-          <Typography variant="body2">File name</Typography>
-          <TextField
-            name="title"
-            value={formValues.title}
-            onChange={onFieldUpdate}
-            size="small"
-            InputProps={{
-              startAdornment: "File:",
-              endAdornment: ".webm",
-            }}
-          />
+    <Stack direction="column" spacing={2}>
+      <Stack spacing={1}>
+        <Typography variant="body2">File name</Typography>
+        <TextField
+          name="title"
+          value={fileTitle}
+          onChange={(e) => setFileTitle(e.target.value)}
+          size="small"
+          InputProps={{
+            startAdornment: "File:",
+            endAdornment: ".webm",
+          }}
+        />
+      </Stack>
+      <Stack spacing={1}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Typography variant="body2">File Page source</Typography>
+          <Button size="small" onClick={resetPageText}>
+            Reset
+          </Button>
         </Stack>
-        <Stack spacing={1}>
-          <Typography variant="body2">Date</Typography>
-          <TextField
-            name="date"
-            value={formValues.date}
-            onChange={onFieldUpdate}
-            size="small"
-          />
-        </Stack>
-        <Stack spacing={1}>
-          <Typography variant="body2">Source</Typography>
-          <TextField
-            name="source"
-            value={formValues.source}
-            onChange={onFieldUpdate}
-            size="small"
-          />
-        </Stack>
-        <Stack spacing={1}>
-          <Typography variant="body2">Author</Typography>
-          <TextField
-            name="author"
-            value={formValues.author}
-            onChange={onFieldUpdate}
-            size="small"
-          />
-        </Stack>
-        <Stack spacing={1}>
-          <Typography variant="body2">License</Typography>
-          <TextField
-            name="license"
-            value={formValues.license}
-            onChange={onFieldUpdate}
-            size="small"
-          />
-        </Stack>
+        <TextField
+          name="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          size="small"
+          multiline
+          rows={10}
+          maxRows={10}
+        />
         <Button
           variant="contained"
           color="primary"

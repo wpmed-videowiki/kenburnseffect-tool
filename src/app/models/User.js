@@ -9,16 +9,19 @@ const UserSchema = new Schema(
     wikimediaId: {type: String, default: ''},
     wikimediaToken: {type: String, default: ''},
     wikimediaRefreshToken: {type: String, default: ''},
+    wikimediaTokenExpiresAt: {type: Number, default: 0},
     wikimediaProfile: {type: Object, default: {}},
 
     mdwikiId: {type: String, default: ''},
     mdwikiToken: {type: String, default: ''},
     mdwikiRefreshToken: {type: String, default: ''},
+    mdwikiTokenExpiresAt: {type: Number, default: 0},
     mdwikiProfile: {type: Object, default: {}},
 
     nccommonsId: {type: String, default: ''},
     nccommonsToken: {type: String, default: ''},
     nccommonsRefreshToken: {type: String, default: ''},
+    nccommmonsTokenExpiresAt: {type: Number, default: 0},
     nccommonsProfile: {type: Object, default: {}},
   },
   { timestamps: true }

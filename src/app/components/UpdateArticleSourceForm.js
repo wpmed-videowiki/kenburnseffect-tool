@@ -7,7 +7,11 @@ import { Login } from "@mui/icons-material";
 import { popupCenter } from "../utils/popupTools";
 import { toast } from "react-toastify";
 
-const UpdateArticleSourceForm = ({ wikiSource, originalFileName, fileName }) => {
+const UpdateArticleSourceForm = ({
+  wikiSource,
+  originalFileName,
+  fileName,
+}) => {
   const { data: session } = useSession();
 
   const [originalPageSource, setOriginalPageSource] = useState("");
@@ -18,7 +22,11 @@ const UpdateArticleSourceForm = ({ wikiSource, originalFileName, fileName }) => 
   const onGetPageSource = async () => {
     const page = await fetchPageSource(wikiSource);
     const text = page.revisions[0].content;
-    const updatedText = replaceTemplateWithFile(text, originalFileName, fileName);
+    const updatedText = replaceTemplateWithFile(
+      text,
+      originalFileName,
+      fileName
+    );
 
     setOriginalPageSource(updatedText);
   };
@@ -90,14 +98,6 @@ const UpdateArticleSourceForm = ({ wikiSource, originalFileName, fileName }) => 
 
   return (
     <>
-      {/* {!originalPageSource && (
-        <Typography variant="body2">
-          Click the button below to get the source of the article
-        </Typography>
-      )} */}
-      {/* <Button sx={{ textTransform: "capitalize" }} onClick={onGetPageSource}>
-        Update Article's source with the video
-      </Button> */}
       {originalPageSource && (
         <Box width="100%">
           <Typography variant="body2">New page source</Typography>

@@ -51,7 +51,6 @@ const providers = [
     id: "mdwiki",
   }),
 ];
-
 const handler = async (req, res) => {
   const appUserId = req.cookies.get("app-user-id")?.value;
 
@@ -68,6 +67,7 @@ const handler = async (req, res) => {
               [`${provider}Id`]: data.account.providerAccountId,
               [`${provider}Token`]: data.account.access_token,
               [`${provider}RefreshToken`]: data.account.refresh_token,
+              [`${provider}TokenExpiresAt`]: data.account.expires_at * 1000,
               [`${provider}Profile`]: data.profile,
             };
             await UserModel.findByIdAndUpdate(appUserId, {
@@ -80,6 +80,7 @@ const handler = async (req, res) => {
         return true;
       },
       async jwt({ token, account }) {
+        await connectDB();
         const user = await UserModel.findById(appUserId);
         if (account) {
           token = Object.assign({}, token, {
@@ -89,7 +90,40 @@ const handler = async (req, res) => {
         return token;
       },
       async session({ session, token }) {
-        const user = await UserModel.findById(appUserId);
+        await connectDB();
+        let user = await UserModel.findById(appUserId);
+        // check tokens expiration
+        const update = {};
+        if (user.wikimediaId && user.wikimediaTokenExpiresAt < Date.now()) {
+          update.wikimediaId = null;
+          update.wikimediaProfile = null;
+          update.wikimediaToken = null;
+          update.wikimediaRefreshToken = null;
+          update.wikimediaTokenExpiresAt = null;
+        }
+        if (user.mdwikiId && user.mdwikiTokenExpiresAt < Date.now()) {
+          update.mdwikiId = null;
+          update.mdwikiProfile = null;
+          update.mdwikiToken = null;
+          update.mdwikiRefreshToken = null;
+          update.mdwikiTokenExpiresAt = null;
+        }
+        if (user.nccommonsId && user.nccommonsTokenExpiresAt < Date.now()) {
+          update.nccommonsId = null;
+          update.nccommonsProfile = null;
+          update.nccommonsToken = null;
+          update.nccommonsRefreshToken = null;
+          update.nccommonsTokenExpiresAt = null;
+        }
+        if (Object.keys(update).length) {
+          user = await UserModel.findByIdAndUpdate(
+            appUserId,
+            {
+              $set: update,
+            },
+            { new: true }
+          );
+        }
         if (session) {
           session = Object.assign({}, session, {
             user: {

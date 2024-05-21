@@ -22,6 +22,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { useSearchParams } from "next/navigation";
 import { fetchCommonsImage, fetchPageSource } from "./actions/commons";
 import { loadCrossOriginImage } from "./utils/loadCrossOriginImage";
+import { extractLicenseTag, extractPermission } from "./utils/sourceParser";
 import UploadForm from "./components/UploadForm";
 import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
@@ -53,6 +54,9 @@ export default function Home() {
   const [videoBase64, setVideoBase64] = useState("");
   const [image, setImage] = useState();
   const [page, setPage] = useState();
+  const [pageSource, setPageSource] = useState("");
+  const [permission, setPermission] = useState("");
+  const [license, setLicense] = useState("");
   const [uploadedUrl, setUploadedUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [canvasDimensions, setCanvasDimensions] = useState({
@@ -199,6 +203,14 @@ export default function Home() {
       );
       const image = await loadCrossOriginImage(page.imageinfo[0].url);
       setImageUrl(page.imageinfo[0].url);
+      const pageSource = await fetchPageSource(
+        page.imageinfo[0].descriptionurl
+      );
+      const license = extractLicenseTag(pageSource.revisions[0].content);
+      const permission = extractPermission(pageSource.revisions[0].content);
+      setPageSource(pageSource);
+      setLicense(license);
+      setPermission(permission);
       setPage(page);
       setImage(image);
       setCanvasDimensions({
@@ -363,7 +375,10 @@ export default function Home() {
                 <>
                   <UploadForm
                     title={page?.title.replace(/\s/g, "_").replace("File:", "")}
-                    license={page?.imageinfo[0].extmetadata.License?.value}
+                    license={
+                      license || page?.imageinfo[0].extmetadata.License?.value
+                    }
+                    permission={permission}
                     video={videoBase64}
                     onUploaded={onUploaded}
                     disabled={playing}
@@ -387,6 +402,13 @@ export default function Home() {
                 >
                   <a href={uploadedUrl} target="_blank" rel="noreferrer">
                     View on Commons
+                  </a>
+                  <a
+                    href={searchParams.get("wikiSource")}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Original Page
                   </a>
                   <UpdateArticleSourceForm
                     wikiSource={searchParams.get("wikiSource")}
