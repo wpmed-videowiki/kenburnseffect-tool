@@ -24,7 +24,8 @@
     "react-image-crop": "^11.0.5",
     "react-toastify": "^10.0.5",
     "rect-crop": "^0.0.0",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "use-debounce": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "20.12.12",

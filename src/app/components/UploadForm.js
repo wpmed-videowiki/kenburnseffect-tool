@@ -1,10 +1,11 @@
 import { Button, Stack, TextField, Typography } from "@mui/material";
-import { uploadFile } from "../actions/commons";
-import { useState } from "react";
+import { fetchCommonsImage, uploadFile } from "../actions/commons";
+import { useEffect, useState } from "react";
 import { UploadFile } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
 import { popupCenter } from "../utils/popupTools";
 import { toast } from "react-toastify";
+import { useDebounce } from "use-debounce";
 
 const getWikiPageText = ({
   description,
@@ -46,6 +47,9 @@ const UploadForm = ({
 
   const [loading, setLoading] = useState(false);
   const [fileTitle, setFileTitle] = useState(tmpFileTitle);
+  const [debouncedFileTitle] = useDebounce(fileTitle, 500);
+
+  const [pageAlreadyExists, setPageAlreadyExists] = useState(false);
   const [text, setText] = useState(
     getWikiPageText({
       description: fileTitle,
@@ -104,6 +108,20 @@ const UploadForm = ({
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!debouncedFileTitle) return;
+    async function checkFileExists() {
+      const page = await fetchCommonsImage(`File:${debouncedFileTitle}.webm`);
+      console.log({ page });
+      if (page.pageid) {
+        setPageAlreadyExists(true);
+      } else {
+        setPageAlreadyExists(false);
+      }
+    }
+    checkFileExists();
+  }, [debouncedFileTitle]);
 
   switch (provider) {
     case "commons":
@@ -168,6 +186,12 @@ const UploadForm = ({
             endAdornment: ".webm",
           }}
         />
+        {pageAlreadyExists && (
+          <Typography variant="body2" color="orange">
+            File with this name already exists. Using this file name will
+            override the existing file.
+          </Typography>
+        )}
       </Stack>
       <Stack spacing={1}>
         <Stack
