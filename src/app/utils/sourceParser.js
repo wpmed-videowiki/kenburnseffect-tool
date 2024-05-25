@@ -22,7 +22,6 @@ export const extractPermission = (text) => {
   const match = text.match(regex);
 
   if (match) {
-    console.log({ match });
     return match[0].replace(/Permission[=\s*:]/gi, "").trim();
   }
   return "";

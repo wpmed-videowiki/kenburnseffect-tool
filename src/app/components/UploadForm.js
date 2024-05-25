@@ -113,7 +113,6 @@ const UploadForm = ({
     if (!debouncedFileTitle) return;
     async function checkFileExists() {
       const page = await fetchCommonsImage(`File:${debouncedFileTitle}.webm`);
-      console.log({ page });
       if (page.pageid) {
         setPageAlreadyExists(true);
       } else {

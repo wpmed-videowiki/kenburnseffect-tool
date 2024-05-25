@@ -15,6 +15,8 @@ import {
   Typography,
   Container,
   Modal,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -41,6 +43,8 @@ export default function Home() {
   const effectRef = useRef(null);
   const imageRef = useRef(null);
   const searchParams = useSearchParams();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [playing, setPlaying] = useState(false);
   const [cropType, setCropType] = useState("start");
@@ -67,6 +71,7 @@ export default function Home() {
     width: 0,
     height: 0,
   });
+  const containerRef = useRef(null);
 
   const convertToRectCrop = (jsonCoords, imageWidth, imageHeight) => {
     const x_ratio = (jsonCoords.x + jsonCoords.width / 2) / imageWidth;
@@ -151,8 +156,8 @@ export default function Home() {
     if (startCrop) {
       const rectCropFormatStart = convertToRectCrop(
         startCrop,
-        canvasDimensions.width,
-        imageRef.current.height
+        imageDimensions.width,
+        imageDimensions.height
       );
 
       setStartCropConverted(rectCropFormatStart);
@@ -160,12 +165,12 @@ export default function Home() {
     if (endCrop) {
       const rectCropFormatEnd = convertToRectCrop(
         endCrop,
-        canvasDimensions.width,
-        imageRef.current.height
+        imageDimensions.width,
+        imageDimensions.height
       );
       setEndCropConverted(rectCropFormatEnd);
     }
-  }, [endCrop, startCrop, canvasDimensions.width, imageRef.current?.height]);
+  }, [endCrop, startCrop, imageDimensions.width, imageDimensions.height]);
 
   useEffect(() => {
     if (playing && !creatingVideo) {
@@ -186,7 +191,7 @@ export default function Home() {
   useEffect(() => {
     async function init() {
       const fileName = searchParams.get("file");
-      if (!fileName) {
+      if (!fileName || !containerRef.current) {
         return;
       }
       if (!fileName.includes("File:")) {
@@ -223,35 +228,57 @@ export default function Home() {
             ? image.height * (DEFAULT_IMAGE_WIDTH / image.width)
             : DEFAULT_IMAGE_HEIGHT,
       });
+      const imageAspectRatio = image.width / image.height;
+      setImageDimensions({
+        width: containerRef.current.getBoundingClientRect().width,
+        height:
+          containerRef.current.getBoundingClientRect().width / imageAspectRatio,
+      });
     }
     init();
-  }, [searchParams.get("file")]);
+  }, [searchParams.get("file"), containerRef.current]);
 
   return (
     <main>
       <Header />
-      <Container maxWidth="xl">
+      <canvas
+        ref={canvasRef}
+        width={canvasDimensions.width}
+        height={canvasDimensions.height}
+        style={{
+          transitionDuration: ".5s",
+          position: "absolute",
+          top: -1000 - canvasDimensions.height,
+        }}
+      />
+      {playing && (
+        <Modal open={playing} onClose={() => setPlaying(false)}>
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              color: "white",
+              padding: 2,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h5">Creating video, please wait...</Typography>
+          </Stack>
+        </Modal>
+      )}
+      <Container maxWidth="xl" sx={{ overflowY: "auto" }}>
         <Grid container columnSpacing={4} rowSpacing={0} marginTop={11}>
-          <Grid item xs={12} md={8}>
-            <Stack alignItems="center" spacing={1} position="relative">
-              <canvas
-                ref={canvasRef}
-                width={canvasDimensions.width}
-                height={canvasDimensions.height}
-                style={{
-                  maxHeight: imageRef?.current?.height,
-                  opacity: !playing ? 0 : 1,
-                  zIndex: !playing ? -10 : 10,
-                  transitionDuration: ".5s",
-                  position: "absolute",
-                  top: 0,
-                }}
-              />
+          <Grid item xs={12} md={8} ref={containerRef}>
+            <Stack alignItems="center" spacing={1}>
               {/* ReactCrop image */}
               <Box
                 sx={{
-                  opacity: playing ? 0 : 1,
-                  zIndex: playing ? -10 : 10,
+                  opacity: 1,
                   transitionDuration: ".5s",
                 }}
               >
@@ -264,8 +291,8 @@ export default function Home() {
                   <img
                     src={imageUrl}
                     style={{
-                      width: canvasDimensions.width,
-                      height: canvasDimensions.height,
+                      width: imageDimensions.width,
+                      height: imageDimensions.height,
                     }}
                     ref={imageRef}
                     alt=""
@@ -276,24 +303,42 @@ export default function Home() {
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={5}>
-              <Stack spacing={1}>
-                <Typography variant="body1">How does it work?</Typography>
-                <Typography variant="body2">
-                  1. Select the start and end crop areas of the image.
-                </Typography>
-                <Typography variant="body2">
-                  2. Set the duration of the effect.
-                </Typography>
-                <Typography variant="body2">
-                  3. Click on the "Apply" button.
-                </Typography>
-                <Typography variant="body2">
-                  4. Download the video or upload it to Wikimedia Commons.
-                </Typography>
-              </Stack>
+              {!videoUrl && (
+                <Stack spacing={1}>
+                  <Typography variant="body1">How does it work?</Typography>
+                  <Typography variant="body2">
+                    1. Select the start and end crop areas of the image.
+                  </Typography>
+                  <Typography variant="body2">
+                    2. Set the duration of the effect.
+                  </Typography>
+                  <Typography variant="body2">
+                    3. Click on the "Apply" button.
+                  </Typography>
+                  <Typography variant="body2">
+                    4. Download the video or upload it to Wikimedia Commons.
+                  </Typography>
+                </Stack>
+              )}
               <Stack spacing={2} justifyContent="center">
                 {/* Buttons */}
-                <Stack direction="row" spacing={2}>
+                {videoUrl && !playing && (
+                  <video controls src={videoUrl} style={{ width: "100%" }} />
+                )}
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={
+                    isMobile
+                      ? {
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          rowGap: 3,
+                          justifyContent: "center",
+                        }
+                      : {}
+                  }
+                >
                   <Button
                     variant="contained"
                     color={cropType === "start" ? "primary" : "inherit"}
@@ -301,6 +346,7 @@ export default function Home() {
                       minWidth: 150,
                     }}
                     onClick={() => setCropType("start")}
+                    size="large"
                   >
                     Start crop
                   </Button>
@@ -311,6 +357,7 @@ export default function Home() {
                       minWidth: 150,
                     }}
                     onClick={() => setCropType("end")}
+                    size="large"
                   >
                     End crop
                   </Button>
@@ -322,8 +369,27 @@ export default function Home() {
                     value={duration}
                     onChange={(e) => setDuration(parseInt(e.target.value))}
                   />
+                  {duration <= 1000 && (
+                    <Typography variant="body2" color="error">
+                      Duration must be greater than 1000ms
+                    </Typography>
+                  )}
                 </Stack>
-                <Stack direction="row" spacing={2} justifyContent="center">
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="center"
+                  sx={
+                    isMobile
+                      ? {
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          rowGap: 3,
+                          justifyContent: "center",
+                        }
+                      : {}
+                  }
+                >
                   <Box>
                     <Button
                       variant="contained"
