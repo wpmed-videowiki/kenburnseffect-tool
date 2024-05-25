@@ -21,7 +21,7 @@ const UserSchema = new Schema(
     nccommonsId: {type: String, default: ''},
     nccommonsToken: {type: String, default: ''},
     nccommonsRefreshToken: {type: String, default: ''},
-    nccommmonsTokenExpiresAt: {type: Number, default: 0},
+    nccommonsTokenExpiresAt: {type: Number, default: 0},
     nccommonsProfile: {type: Object, default: {}},
   },
   { timestamps: true }

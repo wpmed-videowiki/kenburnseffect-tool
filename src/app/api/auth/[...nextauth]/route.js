@@ -94,21 +94,32 @@ const handler = async (req, res) => {
         let user = await UserModel.findById(appUserId);
         // check tokens expiration
         const update = {};
-        if (user.wikimediaId && user.wikimediaTokenExpiresAt < Date.now()) {
+        if (
+          user.wikimediaId &&
+          (!user.wikimediaTokenExpiresAt ||
+            user.wikimediaTokenExpiresAt < Date.now())
+        ) {
           update.wikimediaId = null;
           update.wikimediaProfile = null;
           update.wikimediaToken = null;
           update.wikimediaRefreshToken = null;
           update.wikimediaTokenExpiresAt = null;
         }
-        if (user.mdwikiId && user.mdwikiTokenExpiresAt < Date.now()) {
+        if (
+          user.mdwikiId &&
+          (!user.mdwikiTokenExpiresAt || user.mdwikiTokenExpiresAt < Date.now())
+        ) {
           update.mdwikiId = null;
           update.mdwikiProfile = null;
           update.mdwikiToken = null;
           update.mdwikiRefreshToken = null;
           update.mdwikiTokenExpiresAt = null;
         }
-        if (user.nccommonsId && user.nccommonsTokenExpiresAt < Date.now()) {
+        if (
+          user.nccommonsId &&
+          (!user.nccommonsTokenExpiresAt ||
+            user.nccommonsTokenExpiresAt < Date.now())
+        ) {
           update.nccommonsId = null;
           update.nccommonsProfile = null;
           update.nccommonsToken = null;
