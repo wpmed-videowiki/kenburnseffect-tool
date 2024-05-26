@@ -1,5 +1,5 @@
 function escapeRegExp(text) {
-  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 }
 
 export const replaceTemplateWithFile = (
@@ -8,11 +8,20 @@ export const replaceTemplateWithFile = (
   targetFileName
 ) => {
   const regex = new RegExp(
-    `\\{\\{Ken Burns effect\\n\\|FileName\\s*=\\s*(File:)?${escapeRegExp(originalFileName.replace('File:', ''))}\\n\\}\\}`, 'ig'
+    `\\{\\{Ken Burns effect\\n\\|file\\s*=\\s*(File:)?${escapeRegExp(
+      originalFileName.replace("File:", "")
+    )}\\n\\}\\}`,
+    "ig"
   );
   const replacement = `[[${targetFileName}|100px|left]]`;
 
-  return pageText.replace(regex, replacement);
+  const spaceRegex = new RegExp(
+    `\\{\\{Ken Burns effect\\n\\|file\\s*=\\s*(File:)?${escapeRegExp(
+      originalFileName.replace("File:", "").replace(/\_/g, " ")
+    )}\\n\\}\\}`,
+    "ig"
+  );
+  return pageText.replace(regex, replacement).replace(spaceRegex, replacement);
 };
 
 // const result = replaceTemplateWithFile(
@@ -21,11 +30,11 @@ export const replaceTemplateWithFile = (
 // {{-}}
 
 // ==Ken Burns testing==
-// [[File:Gout2010(KenBurns).webm|100px|left]] 
+// [[File:Gout2010(KenBurns).webm|100px|left]]
 // {{clear}}
 
 // ==Ken Burns testing2==
-// [[File:The_gout_james_gillray(KenBurns).webm|100px|left]] 
+// [[File:The_gout_james_gillray(KenBurns).webm|100px|left]]
 // {{clear}}
 
 // ==Ken Burns testing3==
