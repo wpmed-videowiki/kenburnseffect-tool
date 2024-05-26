@@ -2,25 +2,26 @@ function escapeRegExp(text) {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 }
 
+const generateTemplateRegex = (text) =>
+  new RegExp(
+    `\\{\\{Ken Burns effect[^file]*file.*=\\s*(File:)?${escapeRegExp(
+      text
+    )}[^\\}]*\\}\\}`,
+    "ig"
+  );
+
 export const replaceTemplateWithFile = (
   pageText,
   originalFileName,
   targetFileName
 ) => {
-  const regex = new RegExp(
-    `\\{\\{Ken Burns effect\\n\\|file\\s*=\\s*(File:)?${escapeRegExp(
-      originalFileName.replace("File:", "")
-    )}\\n\\}\\}`,
-    "ig"
-  );
   const replacement = `[[${targetFileName}|100px|left]]`;
 
-  const spaceRegex = new RegExp(
-    `\\{\\{Ken Burns effect\\n\\|file\\s*=\\s*(File:)?${escapeRegExp(
-      originalFileName.replace("File:", "").replace(/\_/g, " ")
-    )}\\n\\}\\}`,
-    "ig"
+  const regex = generateTemplateRegex(originalFileName.replace("File:", ""));
+  const spaceRegex = generateTemplateRegex(
+    originalFileName.replace("File:", "").replace(/\_/g, " ")
   );
+
   return pageText.replace(regex, replacement).replace(spaceRegex, replacement);
 };
 
@@ -45,8 +46,8 @@ export const replaceTemplateWithFile = (
 
 // ==References==
 // {{reflist}}`,
-// 'File:Covid_19_(Radiopaedia_87534).PNG',
-// 'File:Covid_19_(Radiopaedia_87534)(KenBurns).webm',
+//   "File:Covid_19_(Radiopaedia_87534).PNG",
+//   "File:Covid_19_(Radiopaedia_87534)(KenBurns).webm"
 // );
 
-// console.log(result)
+// console.log(result);
