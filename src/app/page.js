@@ -28,6 +28,7 @@ import { extractLicenseTag, extractPermission } from "./utils/sourceParser";
 import UploadForm from "./components/UploadForm";
 import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
+import SearchForm from "./components/SearchForm";
 import { getAppUser } from "./actions/auth";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 
@@ -237,6 +238,23 @@ export default function Home() {
     }
     init();
   }, [searchParams.get("file"), containerRef.current]);
+
+  if (!searchParams.get("file")) {
+    return (
+      <main>
+        <Header />
+        <Container maxWidth="xl">
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ height: "calc(100vh - 64px)" }}
+          >
+            <SearchForm />
+          </Stack>
+        </Container>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -469,18 +487,22 @@ export default function Home() {
                   <a href={uploadedUrl} target="_blank" rel="noreferrer">
                     View on Commons
                   </a>
-                  <a
-                    href={searchParams.get("wikiSource")}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    View Original Page
-                  </a>
-                  <UpdateArticleSourceForm
-                    wikiSource={searchParams.get("wikiSource")}
-                    originalFileName={searchParams.get("file")}
-                    fileName={uploadedUrl.split("/").pop()}
-                  />
+                  {searchParams.get("wikiSource") && (
+                    <>
+                      <a
+                        href={searchParams.get("wikiSource")}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View Original Page
+                      </a>
+                      <UpdateArticleSourceForm
+                        wikiSource={searchParams.get("wikiSource")}
+                        originalFileName={searchParams.get("file")}
+                        fileName={uploadedUrl.split("/").pop()}
+                      />
+                    </>
+                  )}
                 </Stack>
               )}
             </Stack>
