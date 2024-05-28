@@ -289,7 +289,7 @@ export default function Home() {
           </Stack>
         </Modal>
       )}
-      <Container maxWidth="xl" sx={{ overflowY: "auto" }}>
+      <Container maxWidth="xl">
         <Grid container columnSpacing={4} rowSpacing={0} marginTop={11}>
           <Grid item xs={12} md={8} ref={containerRef}>
             <Stack alignItems="center" spacing={1}>
