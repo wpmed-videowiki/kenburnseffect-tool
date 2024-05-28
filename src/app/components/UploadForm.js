@@ -52,7 +52,7 @@ const UploadForm = ({
   const [pageAlreadyExists, setPageAlreadyExists] = useState(false);
   const [text, setText] = useState(
     getWikiPageText({
-      description: fileTitle,
+      description: `${fileTitle}. Created by [https://kenburnseffect-tool.wmcloud.org/ Ken Burns Effect Tool].`,
       date: new Date().toISOString().split("T")[0],
       source: `${
         provider === "commons"

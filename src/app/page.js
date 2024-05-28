@@ -341,7 +341,13 @@ export default function Home() {
               <Stack spacing={2} justifyContent="center">
                 {/* Buttons */}
                 {videoUrl && !playing && (
-                  <video controls src={videoUrl} style={{ width: "100%" }} />
+                  <video
+                    controls
+                    src={videoUrl}
+                    style={{ width: "100%" }}
+                    autoPlay
+                    muted
+                  />
                 )}
                 <Stack
                   direction="row"
@@ -357,41 +363,48 @@ export default function Home() {
                       : {}
                   }
                 >
-                  <Button
-                    variant="contained"
-                    color={cropType === "start" ? "primary" : "inherit"}
-                    sx={{
-                      minWidth: 150,
-                    }}
-                    onClick={() => setCropType("start")}
-                    size="large"
-                  >
-                    Start crop
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color={cropType === "end" ? "primary" : "inherit"}
-                    sx={{
-                      minWidth: 150,
-                    }}
-                    onClick={() => setCropType("end")}
-                    size="large"
-                  >
-                    End crop
-                  </Button>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="duration (ms)"
-                    id="duration"
-                    value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value))}
-                  />
-                  {duration <= 1000 && (
-                    <Typography variant="body2" color="error">
-                      Duration must be greater than 1000ms
-                    </Typography>
-                  )}
+                  <Box>
+                    <Button
+                      variant="contained"
+                      color={cropType === "start" ? "primary" : "inherit"}
+                      sx={{
+                        minWidth: 150,
+                      }}
+                      onClick={() => setCropType("start")}
+                      size="large"
+                    >
+                      Start crop
+                    </Button>
+                  </Box>
+                  <Box>
+                    <Button
+                      variant="contained"
+                      color={cropType === "end" ? "primary" : "inherit"}
+                      sx={{
+                        minWidth: 150,
+                      }}
+                      onClick={() => setCropType("end")}
+                      size="large"
+                    >
+                      End crop
+                    </Button>
+                  </Box>
+                  <Box>
+                    <TextField
+                      type="number"
+                      fullWidth
+                      label="duration (ms)"
+                      id="duration"
+                      value={duration}
+                      onChange={(e) => setDuration(parseInt(e.target.value))}
+                      size="small"
+                    />
+                    {duration <= 1000 && (
+                      <Typography variant="body2" color="error">
+                        Duration must be greater than 1000ms
+                      </Typography>
+                    )}
+                  </Box>
                 </Stack>
                 <Stack
                   direction="row"
@@ -419,6 +432,7 @@ export default function Home() {
                         !startCropConverted ||
                         !endCropConverted ||
                         !duration ||
+                        duration < 1000 ||
                         playing
                       }
                     >

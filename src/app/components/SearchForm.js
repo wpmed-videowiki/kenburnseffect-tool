@@ -39,7 +39,7 @@ const SearchForm = () => {
         fullWidth
         id="search"
         noOptionsText={
-          loading ? "Loading..." : "Enter the image url or file name"
+          loading ? "Loading..." : "Paste the image url or file name here"
         }
         inputValue={search}
         onInputChange={(e, value) => setSearch(value.trim() || "")}
