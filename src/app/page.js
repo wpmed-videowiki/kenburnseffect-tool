@@ -207,8 +207,8 @@ export default function Home() {
         searchParams.get("file"),
         searchParams.get("wikiSource")
       );
-      const image = await loadCrossOriginImage(page.imageinfo[0].url);
-      setImageUrl(page.imageinfo[0].url);
+      const image = await loadCrossOriginImage(page.imageinfo[0].thumburl || page.imageinfo[0].url);
+      setImageUrl(page.imageinfo[0].thumburl || page.imageinfo[0].url);
       const pageSource = await fetchPageSource(
         page.imageinfo[0].descriptionurl
       );
