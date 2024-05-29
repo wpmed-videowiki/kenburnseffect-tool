@@ -54,16 +54,8 @@ const UploadForm = ({
     getWikiPageText({
       description: `${fileTitle}. Created by [https://kenburnseffect-tool.wmcloud.org/ Ken Burns Effect Tool].`,
       date: new Date().toISOString().split("T")[0],
-      source: `${
-        provider === "commons"
-          ? "https://commons.wikimedia.org"
-          : "https://nccommons.org"
-      }/wiki/File:${title}`,
-      author: `See [${
-        provider === "commons"
-          ? "https://commons.wikimedia.org"
-          : "https://nccommons.org"
-      }/wiki/File:${title} original file] for the list of authors.`,
+      source: `[[:File:${title}]]`,
+      author: `See [[:File:${title}|original file]] for the list of authors.`,
       license: license,
       permission,
     })
