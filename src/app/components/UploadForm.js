@@ -14,7 +14,7 @@ const getWikiPageText = ({
   license,
   author,
   permission,
-  categories
+  categories,
 }) =>
   `
 == {{int:filedesc}} ==
@@ -187,6 +187,11 @@ const UploadForm = ({
             override the existing file.
           </Typography>
         )}
+        {fileTitle.length >= 230 && (
+          <Typography variant="body2" color="red">
+            File name is too long. It should be less than 240 characters.
+          </Typography>
+        )}
       </Stack>
       <Stack spacing={1}>
         <Stack
@@ -216,7 +221,7 @@ const UploadForm = ({
           }}
           startIcon={<UploadFile />}
           onClick={onUpload}
-          disabled={loading || disabled}
+          disabled={loading || disabled || fileTitle.length >= 230}
         >
           {loading
             ? "Uploading..."
