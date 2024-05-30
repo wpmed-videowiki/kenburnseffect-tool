@@ -24,7 +24,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { useSearchParams } from "next/navigation";
 import { fetchCommonsImage, fetchPageSource } from "./actions/commons";
 import { loadCrossOriginImage } from "./utils/loadCrossOriginImage";
-import { extractLicenseTag, extractPermission } from "./utils/sourceParser";
+import { extractLicenseTag, extractPermission ,extractCategories } from "./utils/sourceParser";
 import UploadForm from "./components/UploadForm";
 import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
@@ -63,6 +63,7 @@ export default function Home() {
   const [pageSource, setPageSource] = useState("");
   const [permission, setPermission] = useState("");
   const [license, setLicense] = useState("");
+  const [categories, setCategories] = useState([]);
   const [uploadedUrl, setUploadedUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [canvasDimensions, setCanvasDimensions] = useState({
@@ -238,6 +239,8 @@ export default function Home() {
       );
       const license = extractLicenseTag(pageSource.revisions[0].content);
       const permission = extractPermission(pageSource.revisions[0].content);
+      const categories = extractCategories(pageSource.revisions[0].content);
+      setCategories(categories);
       setPageSource(pageSource);
       setLicense(license);
       setPermission(permission);
@@ -501,6 +504,7 @@ export default function Home() {
                       license || page?.imageinfo[0].extmetadata.License?.value
                     }
                     permission={permission}
+                    categories={categories}
                     video={videoBase64}
                     onUploaded={onUploaded}
                     disabled={playing}

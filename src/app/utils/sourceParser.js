@@ -26,3 +26,13 @@ export const extractPermission = (text) => {
   }
   return "";
 };
+
+export const extractCategories = text => {
+  const regex = /\[\[Category:([^\]]*)\]\]/gi;
+  const matches = text.match(regex);
+
+  if (matches) {
+    return matches;
+  }
+  return [];
+}

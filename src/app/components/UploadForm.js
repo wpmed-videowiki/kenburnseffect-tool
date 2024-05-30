@@ -14,6 +14,7 @@ const getWikiPageText = ({
   license,
   author,
   permission,
+  categories,
 }) =>
   `
 == {{int:filedesc}} ==
@@ -28,6 +29,7 @@ const getWikiPageText = ({
 == {{int:license-header}} ==
 {{${license}}}
 
+${categories.join("\n")}
 `.trim();
 const UploadForm = ({
   title,
@@ -38,6 +40,7 @@ const UploadForm = ({
   provider,
   onUploaded,
   disabled,
+  categories = [],
 }) => {
   const { data: session } = useSession();
 
@@ -58,6 +61,7 @@ const UploadForm = ({
       author: `See [[:File:${title}|original file]] for the list of authors.`,
       license: license,
       permission,
+      categories,
     })
   );
 
@@ -105,7 +109,7 @@ const UploadForm = ({
     if (!debouncedFileTitle) return;
     async function checkFileExists() {
       const page = await fetchCommonsImage(`File:${debouncedFileTitle}.webm`);
-      if (page.pageid) {
+      if (page && page.pageid) {
         setPageAlreadyExists(true);
       } else {
         setPageAlreadyExists(false);
@@ -183,6 +187,11 @@ const UploadForm = ({
             override the existing file.
           </Typography>
         )}
+        {fileTitle.length >= 230 && (
+          <Typography variant="body2" color="red">
+            File name is too long. It should be less than 240 characters.
+          </Typography>
+        )}
       </Stack>
       <Stack spacing={1}>
         <Stack
@@ -212,7 +221,7 @@ const UploadForm = ({
           }}
           startIcon={<UploadFile />}
           onClick={onUpload}
-          disabled={loading || disabled}
+          disabled={loading || disabled || fileTitle.length >= 230}
         >
           {loading
             ? "Uploading..."
