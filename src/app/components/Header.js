@@ -17,6 +17,7 @@ import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { popupCenter } from "../utils/popupTools";
 import { logoutPlatform } from "../actions/auth";
+import Link from "next/link";
 
 const Header = () => {
   const [anchorElUser, setAnchorElUser] = useState(null);
@@ -53,9 +54,15 @@ const Header = () => {
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="h1" color="white !important" fontSize="24px">
-                Ken Burns Effect Tool
-              </Typography>
+              <Link href="/">
+                <Typography
+                  variant="h1"
+                  color="white !important"
+                  fontSize="24px"
+                >
+                  Ken Burns Effect Tool
+                </Typography>
+              </Link>
             </Stack>
           </Stack>
 

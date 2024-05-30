@@ -12,22 +12,49 @@ const getFetchImageUrl = (baseUrl, fileName) =>
     fileName
   )}&prop=imageinfo&iiprop=url|mediatype|size|extmetadata&iiurlwidth=${PLAYER_IMAGE_WIDTH}&format=json&formatversion=2`;
 
-export const fetchCommonsImage = async (fileName, wikiSource) => {
+export const fetchCommonsImage = async (fileName) => {
   let infoUrl = getFetchImageUrl(COMMONS_BASE_URL, fileName);
 
   let response = await fetch(infoUrl);
   let data = await response.json();
   let pages = data.query.pages;
   let page = pages[0];
+  page.wikiSource = COMMONS_BASE_URL.split("/w/api.php")[0];
   if (page.missing) {
     infoUrl = getFetchImageUrl(NCCOMMONS_BASE_URL, fileName);
     response = await fetch(infoUrl);
     data = await response.json();
     pages = data.query.pages;
     page = pages[0];
+    page.wikiSource = NCCOMMONS_BASE_URL.split("/w/api.php")[0];
+    if (page.missing) {
+      return null;
+    }
   }
 
   return page;
+};
+
+export const searchCommonsImages = async (search) => {
+  if (!search) return [];
+  if (search.includes("https://") && search.includes("/wiki/")) {
+    const title = search.split("/wiki/")[1];
+    search = title;
+  }
+  if (!search.startsWith("File:")) {
+    search = `File:${search}`;
+  }
+
+  const page = await fetchCommonsImage(search);
+  if (!page) return [];
+
+  return [
+    {
+      title: page.title,
+      pageid: page.pageid,
+      wikiSource: page.wikiSource,
+    },
+  ];
 };
 
 export const fetchPageSource = async (wikiSource) => {

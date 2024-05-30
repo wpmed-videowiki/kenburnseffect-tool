@@ -11,6 +11,9 @@ export const fetchCSRFToken = async (baseUrl, token) => {
   });
 
   const jsonData = await data.json();
+  if (jsonData.error) {
+    throw new Error(jsonData.error.code);
+  }
   return jsonData.query.tokens.csrftoken;
 };
 
@@ -87,7 +90,7 @@ export const uploadFileToCommons = async (
     if (responseData.error) {
       console.log("============ ERROR ============");
       console.log(responseData.error);
-      throw new Error(responseData.error.toString());
+      throw new Error(responseData.error.code);
     }
 
     await updateArticleText(baseUrl, token, {

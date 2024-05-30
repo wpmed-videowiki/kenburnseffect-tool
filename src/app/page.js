@@ -15,6 +15,8 @@ import {
   Typography,
   Container,
   Modal,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -22,9 +24,11 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { useSearchParams } from "next/navigation";
 import { fetchCommonsImage, fetchPageSource } from "./actions/commons";
 import { loadCrossOriginImage } from "./utils/loadCrossOriginImage";
+import { extractLicenseTag, extractPermission } from "./utils/sourceParser";
 import UploadForm from "./components/UploadForm";
 import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
+import SearchForm from "./components/SearchForm";
 import { getAppUser } from "./actions/auth";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 import { convert } from "./actions/convert";
@@ -41,6 +45,8 @@ export default function Home() {
   const effectRef = useRef(null);
   const imageRef = useRef(null);
   const searchParams = useSearchParams();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [playing, setPlaying] = useState(false);
   const [cropType, setCropType] = useState("start");
@@ -54,6 +60,9 @@ export default function Home() {
   const [videoBase64, setVideoBase64] = useState("");
   const [image, setImage] = useState();
   const [page, setPage] = useState();
+  const [pageSource, setPageSource] = useState("");
+  const [permission, setPermission] = useState("");
+  const [license, setLicense] = useState("");
   const [uploadedUrl, setUploadedUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [canvasDimensions, setCanvasDimensions] = useState({
@@ -64,6 +73,7 @@ export default function Home() {
     width: 0,
     height: 0,
   });
+  const containerRef = useRef(null);
 
   const convertToRectCrop = (jsonCoords, imageWidth, imageHeight) => {
     const x_ratio = (jsonCoords.x + jsonCoords.width / 2) / imageWidth;
@@ -165,8 +175,8 @@ export default function Home() {
     if (startCrop) {
       const rectCropFormatStart = convertToRectCrop(
         startCrop,
-        canvasDimensions.width,
-        imageRef.current.height
+        imageDimensions.width,
+        imageDimensions.height
       );
 
       setStartCropConverted(rectCropFormatStart);
@@ -174,12 +184,12 @@ export default function Home() {
     if (endCrop) {
       const rectCropFormatEnd = convertToRectCrop(
         endCrop,
-        canvasDimensions.width,
-        imageRef.current.height
+        imageDimensions.width,
+        imageDimensions.height
       );
       setEndCropConverted(rectCropFormatEnd);
     }
-  }, [endCrop, startCrop, canvasDimensions.width, imageRef.current?.height]);
+  }, [endCrop, startCrop, imageDimensions.width, imageDimensions.height]);
 
   useEffect(() => {
     if (playing && !creatingVideo) {
@@ -200,7 +210,7 @@ export default function Home() {
   useEffect(() => {
     async function init() {
       const fileName = searchParams.get("file");
-      if (!fileName) {
+      if (!fileName || !containerRef.current) {
         return;
       }
       if (!fileName.includes("File:")) {
@@ -215,8 +225,16 @@ export default function Home() {
         searchParams.get("file"),
         searchParams.get("wikiSource")
       );
-      const image = await loadCrossOriginImage(page.imageinfo[0].url);
-      setImageUrl(page.imageinfo[0].url);
+      const image = await loadCrossOriginImage(page.imageinfo[0].thumburl || page.imageinfo[0].url);
+      setImageUrl(page.imageinfo[0].thumburl || page.imageinfo[0].url);
+      const pageSource = await fetchPageSource(
+        page.imageinfo[0].descriptionurl
+      );
+      const license = extractLicenseTag(pageSource.revisions[0].content);
+      const permission = extractPermission(pageSource.revisions[0].content);
+      setPageSource(pageSource);
+      setLicense(license);
+      setPermission(permission);
       setPage(page);
       setImage(image);
       setCanvasDimensions({
@@ -229,35 +247,74 @@ export default function Home() {
             ? image.height * (DEFAULT_IMAGE_WIDTH / image.width)
             : DEFAULT_IMAGE_HEIGHT,
       });
+      const imageAspectRatio = image.width / image.height;
+      setImageDimensions({
+        width: containerRef.current.getBoundingClientRect().width,
+        height:
+          containerRef.current.getBoundingClientRect().width / imageAspectRatio,
+      });
     }
     init();
-  }, [searchParams.get("file")]);
+  }, [searchParams.get("file"), containerRef.current]);
+
+  if (!searchParams.get("file")) {
+    return (
+      <main>
+        <Header />
+        <Container maxWidth="xl">
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ height: "calc(100vh - 64px)" }}
+          >
+            <SearchForm />
+          </Stack>
+        </Container>
+      </main>
+    );
+  }
 
   return (
     <main>
       <Header />
+      <canvas
+        ref={canvasRef}
+        width={canvasDimensions.width}
+        height={canvasDimensions.height}
+        style={{
+          transitionDuration: ".5s",
+          position: "absolute",
+          top: -1000 - canvasDimensions.height,
+        }}
+      />
+      {playing && (
+        <Modal open={playing} onClose={() => setPlaying(false)}>
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              color: "white",
+              padding: 2,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h5">Creating video, please wait...</Typography>
+          </Stack>
+        </Modal>
+      )}
       <Container maxWidth="xl">
         <Grid container columnSpacing={4} rowSpacing={0} marginTop={11}>
-          <Grid item xs={8}>
-            <Stack alignItems="center" spacing={1} position="relative">
-              <canvas
-                ref={canvasRef}
-                width={canvasDimensions.width}
-                height={canvasDimensions.height}
-                style={{
-                  maxHeight: imageRef?.current?.height,
-                  opacity: !playing ? 0 : 1,
-                  zIndex: !playing ? -10 : 10,
-                  transitionDuration: ".5s",
-                  position: "absolute",
-                  top: 0,
-                }}
-              />
+          <Grid item xs={12} md={8} ref={containerRef}>
+            <Stack alignItems="center" spacing={1}>
               {/* ReactCrop image */}
               <Box
                 sx={{
-                  opacity: playing ? 0 : 1,
-                  zIndex: playing ? -10 : 10,
+                  opacity: 1,
                   transitionDuration: ".5s",
                 }}
               >
@@ -270,8 +327,8 @@ export default function Home() {
                   <img
                     src={imageUrl}
                     style={{
-                      width: canvasDimensions.width,
-                      height: canvasDimensions.height,
+                      width: imageDimensions.width,
+                      height: imageDimensions.height,
                     }}
                     ref={imageRef}
                     alt=""
@@ -280,56 +337,108 @@ export default function Home() {
               </Box>
             </Stack>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={12} md={4}>
             <Stack spacing={5}>
-              <Stack spacing={1}>
-                <Typography variant="body1">How does it work?</Typography>
-                <Typography variant="body2">
-                  1. Select the start and end crop areas of the image.
-                </Typography>
-                <Typography variant="body2">
-                  2. Set the duration of the effect.
-                </Typography>
-                <Typography variant="body2">
-                  3. Click on the "Apply" button.
-                </Typography>
-                <Typography variant="body2">
-                  4. Download the video or upload it to Wikimedia Commons.
-                </Typography>
-              </Stack>
+              {!videoUrl && (
+                <Stack spacing={1}>
+                  <Typography variant="body1">How does it work?</Typography>
+                  <Typography variant="body2">
+                    1. Select the start and end crop areas of the image.
+                  </Typography>
+                  <Typography variant="body2">
+                    2. Set the duration of the effect.
+                  </Typography>
+                  <Typography variant="body2">
+                    3. Click on the "Apply" button.
+                  </Typography>
+                  <Typography variant="body2">
+                    4. Download the video or upload it to Wikimedia Commons.
+                  </Typography>
+                </Stack>
+              )}
               <Stack spacing={2} justifyContent="center">
                 {/* Buttons */}
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="contained"
-                    color={cropType === "start" ? "inherit" : "primary"}
-                    sx={{
-                      minWidth: 150,
-                    }}
-                    onClick={() => setCropType("start")}
-                  >
-                    Start crop
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color={cropType === "end" ? "inherit" : "primary"}
-                    sx={{
-                      minWidth: 150,
-                    }}
-                    onClick={() => setCropType("end")}
-                  >
-                    End crop
-                  </Button>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="duration (ms)"
-                    id="duration"
-                    value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                {videoUrl && !playing && (
+                  <video
+                    controls
+                    src={videoUrl}
+                    style={{ width: "100%" }}
+                    autoPlay
+                    muted
                   />
+                )}
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={
+                    isMobile
+                      ? {
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          rowGap: 3,
+                          justifyContent: "center",
+                        }
+                      : {}
+                  }
+                >
+                  <Box>
+                    <Button
+                      variant="contained"
+                      color={cropType === "start" ? "primary" : "inherit"}
+                      sx={{
+                        minWidth: 150,
+                      }}
+                      onClick={() => setCropType("start")}
+                      size="large"
+                    >
+                      Start crop
+                    </Button>
+                  </Box>
+                  <Box>
+                    <Button
+                      variant="contained"
+                      color={cropType === "end" ? "primary" : "inherit"}
+                      sx={{
+                        minWidth: 150,
+                      }}
+                      onClick={() => setCropType("end")}
+                      size="large"
+                    >
+                      End crop
+                    </Button>
+                  </Box>
+                  <Box>
+                    <TextField
+                      type="number"
+                      fullWidth
+                      label="duration (ms)"
+                      id="duration"
+                      value={duration}
+                      onChange={(e) => setDuration(parseInt(e.target.value))}
+                      size="small"
+                    />
+                    {duration <= 1000 && (
+                      <Typography variant="body2" color="error">
+                        Duration must be greater than 1000ms
+                      </Typography>
+                    )}
+                  </Box>
                 </Stack>
-                <Stack direction="row" spacing={2} justifyContent="center">
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="center"
+                  sx={
+                    isMobile
+                      ? {
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          rowGap: 3,
+                          justifyContent: "center",
+                        }
+                      : {}
+                  }
+                >
                   <Box>
                     <Button
                       variant="contained"
@@ -341,6 +450,7 @@ export default function Home() {
                         !startCropConverted ||
                         !endCropConverted ||
                         !duration ||
+                        duration < 1000 ||
                         playing
                       }
                     >
@@ -381,7 +491,10 @@ export default function Home() {
                 <>
                   <UploadForm
                     title={page?.title.replace(/\s/g, "_").replace("File:", "")}
-                    license={page?.imageinfo[0].extmetadata.License?.value}
+                    license={
+                      license || page?.imageinfo[0].extmetadata.License?.value
+                    }
+                    permission={permission}
                     video={videoBase64}
                     onUploaded={onUploaded}
                     disabled={playing}
@@ -406,11 +519,22 @@ export default function Home() {
                   <a href={uploadedUrl} target="_blank" rel="noreferrer">
                     View on Commons
                   </a>
-                  <UpdateArticleSourceForm
-                    wikiSource={searchParams.get("wikiSource")}
-                    originalFileName={searchParams.get("file")}
-                    fileName={uploadedUrl.split("/").pop()}
-                  />
+                  {searchParams.get("wikiSource") && (
+                    <>
+                      <a
+                        href={searchParams.get("wikiSource")}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View Original Page
+                      </a>
+                      <UpdateArticleSourceForm
+                        wikiSource={searchParams.get("wikiSource")}
+                        originalFileName={searchParams.get("file")}
+                        fileName={uploadedUrl.split("/").pop()}
+                      />
+                    </>
+                  )}
                 </Stack>
               )}
             </Stack>
