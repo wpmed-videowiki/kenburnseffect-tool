@@ -108,16 +108,22 @@ export default function Home() {
       setPlaying(false);
       setCreatingVideo(false);
     }, duration + 500);
-    // await convert({
-    //   fileUrl: page.imageinfo[0].url,
-    //   endCrop: {
-    //     x: endCrop.x / imageRef.current.width,
-    //     y: endCrop.y / imageRef.current.height,
-    //     width: endCrop.width / imageRef.current.width,
-    //     height: endCrop.height / imageRef.current.height,
-    //   },
-    //   duration,
-    // });
+    await convert({
+      fileUrl: page.imageinfo[0].thumburl,
+      startCrop: {
+        x: startCrop.x / imageRef.current.width,
+        y: startCrop.y / imageRef.current.height,
+        width: startCrop.width / imageRef.current.width,
+        height: startCrop.height / imageRef.current.height,
+      },
+      endCrop: {
+        x: endCrop.x / imageRef.current.width,
+        y: endCrop.y / imageRef.current.height,
+        width: endCrop.width / imageRef.current.width,
+        height: endCrop.height / imageRef.current.height,
+      },
+      duration,
+    });
   };
 
   const createAndDownloadVideo = useCallback(() => {
