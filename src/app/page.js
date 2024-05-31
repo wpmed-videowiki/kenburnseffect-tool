@@ -80,9 +80,7 @@ export default function Home() {
     const y_ratio = (jsonCoords.y + jsonCoords.height / 2) / imageHeight;
     const width_ratio = jsonCoords.width / imageWidth;
     const height_ratio = jsonCoords.height / imageHeight;
-    const zoom = Math.sqrt(
-      width_ratio * width_ratio + height_ratio * height_ratio
-    );
+    const zoom = Math.min(width_ratio, height_ratio);
 
     return {
       zoom: zoom,
