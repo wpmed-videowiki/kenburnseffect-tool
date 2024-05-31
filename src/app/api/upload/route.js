@@ -37,7 +37,6 @@ export const POST = async (req, res) => {
   const fileId = generateRandomId();
   const encodedFileId = generateRandomId();
   const fileBuffer = Buffer.from(await file.arrayBuffer());
-  console.log(fileBuffer);
 
   fs.writeFileSync(`./${fileId}.webm`, fileBuffer);
 
@@ -47,7 +46,6 @@ export const POST = async (req, res) => {
     provider === "nccommons" ? user.nccommonsToken : user.wikimediaToken;
 
   await addSilentToFile(`./${fileId}.webm`, `./${encodedFileId}.webm`);
-  console.log({ encodedFileId });
   fs.unlinkSync(`./${fileId}.webm`);
   const fileStream = fs.createReadStream(`./${encodedFileId}.webm`);
 
