@@ -4,7 +4,7 @@ function escapeRegExp(text) {
 
 const generateTemplateRegex = (text) =>
   new RegExp(
-    `\\{\\{Ken Burns effect[^file]*file.*=\\s*(File:)?${escapeRegExp(
+    `\\{\\{Ken Burns(\\seffect)?[^file]*file.*=\\s*(File:)?${escapeRegExp(
       text
     )}[^\\}]*\\}\\}`,
     "ig"
