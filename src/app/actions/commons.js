@@ -89,14 +89,14 @@ export const updatePageSource = async (wikiSource, text) => {
   return result;
 };
 
-export const uploadFile = async (data) => {
+export const uploadFile = async (formData) => {
   const req = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/upload`, {
     method: "POST",
+    body: formData,
     headers: {
-      "Content-Type": "application/json",
       Cookie: (await cookies()).toString(),
+      // "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify(data),
   });
   const response = await req.json();
   return response;

@@ -1,6 +1,9 @@
 FROM node:20.12.2
 WORKDIR /app
 
+RUN apt update -y  
+RUN apt install ffmpeg -y
+
 # copy package.json and package-lock.json   
 COPY package*.json ./
 RUN npm install
