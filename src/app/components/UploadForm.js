@@ -29,6 +29,7 @@ const getWikiPageText = ({
 == {{int:license-header}} ==
 {{${license}}}
 
+[[Category:Ken Burns effect]]
 ${categories.join("\n")}
 `.trim();
 const UploadForm = ({
