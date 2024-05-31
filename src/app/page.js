@@ -1,5 +1,4 @@
 "use client";
-import { useSession } from "next-auth/react";
 import KenBurnsCanvas2D from "kenburns/lib/Canvas2D";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -24,19 +23,19 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { useSearchParams } from "next/navigation";
 import { fetchCommonsImage, fetchPageSource } from "./actions/commons";
 import { loadCrossOriginImage } from "./utils/loadCrossOriginImage";
-import { extractLicenseTag, extractPermission ,extractCategories } from "./utils/sourceParser";
+import {
+  extractLicenseTag,
+  extractPermission,
+  extractCategories,
+} from "./utils/sourceParser";
 import UploadForm from "./components/UploadForm";
-import { blobToBase64 } from "./utils/blobToBase64";
 import Header from "./components/Header";
 import SearchForm from "./components/SearchForm";
 import { getAppUser } from "./actions/auth";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
-import { convert } from "./actions/convert";
 
 const DEFAULT_IMAGE_WIDTH = 1280;
 const DEFAULT_IMAGE_HEIGHT = 720;
-const DEFAULT_CANVAS_WIDTH = 1280;
-const DEFAULT_CANVAS_HEIGHT = 720;
 
 const easing = bezierEasing(0, 0, 1, 1);
 
@@ -54,10 +53,10 @@ export default function Home() {
   const [startCropConverted, setStartCropConverted] = useState(null);
   const [endCrop, setEndCrop] = useState();
   const [endCropConverted, setEndCropConverted] = useState(null);
-  const [duration, setDuration] = useState(4000);
+  const [duration, setDuration] = useState(2000);
   const [creatingVideo, setCreatingVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
-  const [videoBase64, setVideoBase64] = useState("");
+  const [videoBlob, setVideoBlob] = useState("");
   const [image, setImage] = useState();
   const [page, setPage] = useState();
   const [pageSource, setPageSource] = useState("");
@@ -92,76 +91,60 @@ export default function Home() {
     };
   };
 
-  console.log({ page });
   const onApplyEffect = async () => {
-    effectRef.current?.animate(
-      image,
-      rectCrop(startCropConverted.zoom, [
-        startCropConverted.x,
-        startCropConverted.y,
-      ]),
-      rectCrop(endCropConverted.zoom, [endCropConverted.x, endCropConverted.y]),
-      duration,
-      easing
-    );
+    const capturer = new window.CCapture({
+      format: "webm",
+      framerate: 30,
+      verbose: false,
+      quality: 0.8,
+    });
+
+    let isStopped = false;
+    let start;
+
+    function loop() {
+      const now = window.performance.now();
+
+      if (isStopped) return;
+      if (!start) start = now;
+      requestAnimationFrame(loop);
+      let p = Math.min((now - start) / duration, 1);
+
+      effectRef.current?.animateStep(
+        image,
+        rectCrop(startCropConverted.zoom, [
+          startCropConverted.x,
+          startCropConverted.y,
+        ]),
+        rectCrop(endCropConverted.zoom, [
+          endCropConverted.x,
+          endCropConverted.y,
+        ]),
+        easing(p)
+      );
+      capturer.capture(canvasRef.current);
+    }
+
     setPlaying(true);
+    requestAnimationFrame(loop);
+    capturer.start();
+
     setTimeout(() => {
+      isStopped = true;
+      capturer.stop();
       setPlaying(false);
       setCreatingVideo(false);
-    }, duration + 500);
-    await convert({
-      fileUrl: page.imageinfo[0].thumburl,
-      startCrop: {
-        x: startCrop.x / imageRef.current.width,
-        y: startCrop.y / imageRef.current.height,
-        width: startCrop.width / imageRef.current.width,
-        height: startCrop.height / imageRef.current.height,
-      },
-      endCrop: {
-        x: endCrop.x / imageRef.current.width,
-        y: endCrop.y / imageRef.current.height,
-        width: endCrop.width / imageRef.current.width,
-        height: endCrop.height / imageRef.current.height,
-      },
-      duration,
-    });
-  };
 
-  const createAndDownloadVideo = useCallback(() => {
-    const stream = canvasRef.current.captureStream();
-    const recorder = new MediaRecorder(stream, {
-      type: "video/webm",
-      bitsPerSecond: 2500000,
-      mimeType: "video/webm; codecs=vp9",
-      videoBitsPerSecond: 2500000,
-    });
-    const chunks = [];
-
-    recorder.addEventListener("dataavailable", (e) => {
-      const url = URL.createObjectURL(e.data);
-      setVideoUrl(url);
-      // blobToBase64(blob)
-      //   .then((base64) => {
-      //     setVideoBase64(base64);
-      //   })
-      //   .catch((err) => {
-      //     console.error(err);
-      //   });
-    });
-
-    // recorder.onstop = () => {
-    //   const blob = new Blob(chunks, );
-    // };
-
-    recorder.start();
-    setTimeout(() => {
-      recorder.stop();
+      capturer.save((blob) => {
+        setVideoUrl(URL.createObjectURL(blob));
+        setVideoBlob(blob);
+      });
     }, duration);
-  }, [duration]);
+  };
 
   const onUploaded = (imageinfo) => {
     setVideoUrl("");
-    setVideoBase64("");
+    setVideoBlob("");
     setUploadedUrl(imageinfo.descriptionurl);
   };
 
@@ -174,7 +157,7 @@ export default function Home() {
     setEndCrop(null);
     setCreatingVideo(false);
     setVideoUrl("");
-    setVideoBase64("");
+    setVideoBlob("");
     setUploadedUrl("");
   };
 
@@ -197,13 +180,6 @@ export default function Home() {
       setEndCropConverted(rectCropFormatEnd);
     }
   }, [endCrop, startCrop, imageDimensions.width, imageDimensions.height]);
-
-  useEffect(() => {
-    if (playing && !creatingVideo) {
-      setCreatingVideo(true);
-      createAndDownloadVideo();
-    }
-  }, [createAndDownloadVideo, creatingVideo, playing]);
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -232,7 +208,9 @@ export default function Home() {
         searchParams.get("file"),
         searchParams.get("wikiSource")
       );
-      const image = await loadCrossOriginImage(page.imageinfo[0].thumburl || page.imageinfo[0].url);
+      const image = await loadCrossOriginImage(
+        page.imageinfo[0].thumburl || page.imageinfo[0].url
+      );
       setImageUrl(page.imageinfo[0].thumburl || page.imageinfo[0].url);
       const pageSource = await fetchPageSource(
         page.imageinfo[0].descriptionurl
@@ -291,7 +269,6 @@ export default function Home() {
         width={canvasDimensions.width}
         height={canvasDimensions.height}
         style={{
-          transitionDuration: ".5s",
           position: "absolute",
           top: -1000 - canvasDimensions.height,
         }}
@@ -505,7 +482,7 @@ export default function Home() {
                     }
                     permission={permission}
                     categories={categories}
-                    video={videoBase64}
+                    video={videoBlob}
                     onUploaded={onUploaded}
                     disabled={playing}
                     wikiSource={searchParams.get("wikiSource")}

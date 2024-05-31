@@ -68,20 +68,13 @@ const UploadForm = ({
   const resetPageText = () => {
     setText(
       getWikiPageText({
-        description: fileTitle,
+        description: `${fileTitle}. Created by [https://kenburnseffect-tool.wmcloud.org/ Ken Burns Effect Tool].`,
         date: new Date().toISOString().split("T")[0],
-        source: `${
-          provider === "commons"
-            ? "https://commons.wikimedia.org"
-            : "https://nccommons.org"
-        }/wiki/File:${title}`,
-        author: `See [${
-          provider === "commons"
-            ? "https://commons.wikimedia.org"
-            : "https://nccommons.org"
-        }/wiki/File:${title} original file] for the list of authors.`,
+        source: `[[:File:${title}]]`,
+        author: `See [[:File:${title}|original file]] for the list of authors.`,
         license: license,
         permission,
+        categories,
       })
     );
   };
@@ -89,14 +82,15 @@ const UploadForm = ({
   const onUpload = async () => {
     setLoading(true);
     try {
-      const data = {
-        filename: `File:${fileTitle}.webm`,
-        text,
-        file: video,
-        wikiSource: wikiSource,
-        provider,
-      };
-      const response = await uploadFile(data);
+      const formData = new FormData();
+      formData.set("filename", `File:${fileTitle}.webm`);
+      formData.set("text", text);
+      formData.set("file", video);
+      formData.set("wikiSource", wikiSource);
+      formData.set("provider", provider);
+
+      const response = await uploadFile(formData);
+
       onUploaded(response.imageinfo);
       toast.success("File uploaded successfully");
     } catch (err) {
