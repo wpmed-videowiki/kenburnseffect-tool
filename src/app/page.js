@@ -33,6 +33,7 @@ import Header from "./components/Header";
 import SearchForm from "./components/SearchForm";
 import { getAppUser } from "./actions/auth";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
+import LinearProgressWithLabel from "./components/LinearProgressWithLabel";
 
 const DEFAULT_IMAGE_WIDTH = 1280;
 const DEFAULT_IMAGE_HEIGHT = 720;
@@ -54,6 +55,7 @@ export default function Home() {
   const [endCrop, setEndCrop] = useState();
   const [endCropConverted, setEndCropConverted] = useState(null);
   const [duration, setDuration] = useState(2000);
+  const [renderProgress, setRenderProgress] = useState(0);
   const [creatingVideo, setCreatingVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoBlob, setVideoBlob] = useState("");
@@ -107,6 +109,7 @@ export default function Home() {
       if (!start) start = now;
       requestAnimationFrame(loop);
       let p = Math.min((now - start) / duration, 1);
+      setRenderProgress(p * 100);
 
       effectRef.current?.animateStep(
         image,
@@ -132,6 +135,7 @@ export default function Home() {
       capturer.stop();
       setPlaying(false);
       setCreatingVideo(false);
+      setRenderProgress(0);
 
       capturer.save((blob) => {
         setVideoUrl(URL.createObjectURL(blob));
@@ -259,6 +263,8 @@ export default function Home() {
     );
   }
 
+  console.log("rendering", renderProgress);
+
   return (
     <main>
       <Header />
@@ -287,7 +293,15 @@ export default function Home() {
               borderRadius: 2,
             }}
           >
-            <Typography variant="h5">Creating video, please wait...</Typography>
+            <Typography variant="h5">
+              Rendering video, please wait...
+            </Typography>
+            <Box sx={{ width: "100%" }}>
+              <LinearProgressWithLabel
+                variant="determinate"
+                value={renderProgress}
+              />
+            </Box>
           </Stack>
         </Modal>
       )}
