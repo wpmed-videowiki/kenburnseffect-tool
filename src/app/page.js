@@ -34,6 +34,7 @@ import SearchForm from "./components/SearchForm";
 import { getAppUser } from "./actions/auth";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 import LinearProgressWithLabel from "./components/LinearProgressWithLabel";
+import { Preview } from "@mui/icons-material";
 
 const DEFAULT_IMAGE_WIDTH = 1280;
 const DEFAULT_IMAGE_HEIGHT = 720;
@@ -42,13 +43,17 @@ const easing = bezierEasing(0, 0, 1, 1);
 
 export default function Home() {
   const canvasRef = useRef(null);
+  const previewCanvasRef = useRef(null);
   const effectRef = useRef(null);
+  const previewEffectRef = useRef(null);
   const imageRef = useRef(null);
+
   const searchParams = useSearchParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [playing, setPlaying] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [cropType, setCropType] = useState("start");
   const [startCrop, setStartCrop] = useState();
   const [startCropConverted, setStartCropConverted] = useState(null);
@@ -91,7 +96,7 @@ export default function Home() {
     };
   };
 
-  const onApplyEffect = async () => {
+  const onRender = async () => {
     const capturer = new window.CCapture({
       format: "webm",
       framerate: 30,
@@ -144,6 +149,23 @@ export default function Home() {
     }, duration);
   };
 
+  const onPreview = () => {
+    previewEffectRef.current?.animate(
+      image,
+      rectCrop(startCropConverted.zoom, [
+        startCropConverted.x,
+        startCropConverted.y,
+      ]),
+      rectCrop(endCropConverted.zoom, [endCropConverted.x, endCropConverted.y]),
+      duration,
+      easing
+    );
+    setPreviewing(true);
+    setTimeout(() => {
+      setPreviewing(false);
+    }, duration + 500);
+  };
+
   const onUploaded = (imageinfo) => {
     setVideoUrl("");
     setVideoBlob("");
@@ -191,6 +213,15 @@ export default function Home() {
       canvasRef.current.getContext("2d")
     );
   }, [canvasRef.current]);
+
+  useEffect(() => {
+    if (!previewCanvasRef.current) {
+      return;
+    }
+    previewEffectRef.current = new KenBurnsCanvas2D(
+      previewCanvasRef.current.getContext("2d")
+    );
+  }, [previewCanvasRef.current]);
 
   useEffect(() => {
     async function init() {
@@ -277,6 +308,7 @@ export default function Home() {
           top: -1000 - canvasDimensions.height,
         }}
       />
+
       {playing && (
         <Modal open={playing} onClose={() => setPlaying(false)}>
           <Stack
@@ -308,11 +340,25 @@ export default function Home() {
       <Container maxWidth="xl">
         <Grid container columnSpacing={4} rowSpacing={0} marginTop={11}>
           <Grid item xs={12} md={8} ref={containerRef}>
-            <Stack alignItems="center" spacing={1}>
+            <Stack alignItems="center" spacing={1} position="relative">
               {/* ReactCrop image */}
+              <canvas
+                ref={previewCanvasRef}
+                width={imageDimensions.width}
+                height={imageDimensions.height}
+                style={{
+                  maxHeight: imageRef?.current?.height,
+                  opacity: !previewing ? 0 : 1,
+                  zIndex: !previewing ? -10 : 10,
+                  transitionDuration: ".5s",
+                  position: "absolute",
+                  top: 0,
+                }}
+              />
               <Box
                 sx={{
-                  opacity: 1,
+                  opacity: previewing ? 0 : 1,
+                  zIndex: previewing ? -10 : 10,
                   transitionDuration: ".5s",
                 }}
               >
@@ -441,7 +487,25 @@ export default function Home() {
                     <Button
                       variant="contained"
                       color="success"
-                      onClick={onApplyEffect}
+                      onClick={onPreview}
+                      startIcon={<PlayArrowIcon />}
+                      size="small"
+                      disabled={
+                        !startCropConverted ||
+                        !endCropConverted ||
+                        !duration ||
+                        duration < 1000 ||
+                        previewing
+                      }
+                    >
+                      Preview
+                    </Button>
+                  </Box>
+                  <Box>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={onRender}
                       size="small"
                       startIcon={<PlayArrowIcon />}
                       disabled={
@@ -452,20 +516,7 @@ export default function Home() {
                         playing
                       }
                     >
-                      Apply
-                    </Button>
-                  </Box>
-                  <Box>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        minWidth: 200,
-                      }}
-                      onClick={handleReset}
-                      startIcon={<RestartAltIcon />}
-                      size="small"
-                    >
-                      Reset
+                      Render
                     </Button>
                   </Box>
                   <Box>
