@@ -569,6 +569,11 @@ export default function Home() {
                           Duration must be greater than 1000ms
                         </Typography>
                       )}
+                      {duration > 15000 && (
+                        <Typography variant="body2" color="error">
+                          Duration should be less than 15000ms
+                        </Typography>
+                      )}
                     </Box>
                   </Stack>
                 </Stack>
@@ -598,7 +603,10 @@ export default function Home() {
                         (!startCropConverted && mode === "double") ||
                         !endCropConverted ||
                         !duration ||
-                        duration < 1000
+                        duration < 1000 ||
+                        duration > 15000 ||
+                        playing ||
+                        previewing
                       }
                     >
                       Preview
@@ -616,7 +624,9 @@ export default function Home() {
                         !endCropConverted ||
                         !duration ||
                         duration < 1000 ||
-                        playing
+                        duration > 15000 ||
+                        playing || 
+                        previewing
                       }
                     >
                       Render
