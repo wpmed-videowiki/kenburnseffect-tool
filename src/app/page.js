@@ -16,6 +16,8 @@ import {
   Modal,
   useTheme,
   useMediaQuery,
+  ButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -32,6 +34,7 @@ import UploadForm from "./components/UploadForm";
 import Header from "./components/Header";
 import SearchForm from "./components/SearchForm";
 import { getAppUser } from "./actions/auth";
+import { renderVideo } from "./actions/render";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 import LinearProgressWithLabel from "./components/LinearProgressWithLabel";
 import { Preview } from "@mui/icons-material";
@@ -54,19 +57,18 @@ export default function Home() {
 
   const [playing, setPlaying] = useState(false);
   const [previewing, setPreviewing] = useState(false);
-  const [cropType, setCropType] = useState("start");
+  const [cropType, setCropType] = useState("end");
+  const [mode, setMode] = useState("single");
   const [startCrop, setStartCrop] = useState();
   const [startCropConverted, setStartCropConverted] = useState(null);
   const [endCrop, setEndCrop] = useState();
   const [endCropConverted, setEndCropConverted] = useState(null);
   const [duration, setDuration] = useState(2000);
   const [renderProgress, setRenderProgress] = useState(0);
-  const [creatingVideo, setCreatingVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoBlob, setVideoBlob] = useState("");
   const [image, setImage] = useState();
   const [page, setPage] = useState();
-  const [pageSource, setPageSource] = useState("");
   const [permission, setPermission] = useState("");
   const [license, setLicense] = useState("");
   const [categories, setCategories] = useState([]);
@@ -94,6 +96,44 @@ export default function Home() {
       x: x_ratio,
       y: y_ratio,
     };
+  };
+
+  const onRenderFFmpeg = async () => {
+    const data = {
+      duration,
+      fileUrl: imageUrl,
+      endCrop: {
+        x: endCrop.x / imageDimensions.width,
+        y: endCrop.y / imageDimensions.height,
+        width: endCrop.width / imageDimensions.width,
+        height: endCrop.height / imageDimensions.height,
+      },
+    };
+
+    try {
+      setPlaying(true);
+      const interval = setInterval(() => {
+        // fake progress
+        setRenderProgress((prev) => Math.min(prev + 1, 100));
+      }, (duration * 100) / 2000);
+
+      const response = await renderVideo(data);
+      clearInterval(interval);
+      const byteArray = Uint8Array.from(
+        atob(response.file)
+          .split("")
+          .map((char) => char.charCodeAt(0))
+      );
+      const blob = new Blob([byteArray], { type: "video/webm" });
+      setVideoUrl(URL.createObjectURL(blob));
+      setVideoBlob(blob);
+      setRenderProgress(0);
+      setPlaying(false);
+    } catch (err) {
+      console.log(err);
+    }
+    setRenderProgress(0);
+    setPlaying(false);
   };
 
   const onRender = async () => {
@@ -139,7 +179,6 @@ export default function Home() {
       isStopped = true;
       capturer.stop();
       setPlaying(false);
-      setCreatingVideo(false);
       setRenderProgress(0);
 
       capturer.save((blob) => {
@@ -172,17 +211,19 @@ export default function Home() {
     setUploadedUrl(imageinfo.descriptionurl);
   };
 
-  const handleReset = () => {
-    setPlaying(false);
-    setDuration(4000);
-    setStartCropConverted(null);
-    setEndCropConverted(null);
-    setStartCrop(null);
-    setEndCrop(null);
-    setCreatingVideo(false);
-    setVideoUrl("");
-    setVideoBlob("");
-    setUploadedUrl("");
+  const onModeChange = (mode) => {
+    setMode(mode);
+    if (mode === "single") {
+      setEndCrop(null);
+      setEndCropConverted(null);
+      setCropType("end");
+    } else if (mode === "double") {
+      setStartCrop(null);
+      setStartCropConverted(null);
+      setEndCrop(null);
+      setEndCropConverted(null);
+      setCropType("start");
+    }
   };
 
   useEffect(() => {
@@ -252,7 +293,6 @@ export default function Home() {
       const permission = extractPermission(pageSource.revisions[0].content);
       const categories = extractCategories(pageSource.revisions[0].content);
       setCategories(categories);
-      setPageSource(pageSource);
       setLicense(license);
       setPermission(permission);
       setPage(page);
@@ -268,10 +308,17 @@ export default function Home() {
             : DEFAULT_IMAGE_HEIGHT,
       });
       const imageAspectRatio = image.width / image.height;
+      const imageWidth = containerRef.current.getBoundingClientRect().width;
+      const imageHeight = imageWidth / imageAspectRatio;
       setImageDimensions({
-        width: containerRef.current.getBoundingClientRect().width,
-        height:
-          containerRef.current.getBoundingClientRect().width / imageAspectRatio,
+        width: imageWidth,
+        height: imageHeight,
+      });
+      setStartCrop({
+        x: 0,
+        y: 0,
+        width: imageWidth,
+        height: imageHeight,
       });
     }
     init();
@@ -294,8 +341,6 @@ export default function Home() {
     );
   }
 
-  console.log("rendering", renderProgress);
-
   return (
     <main>
       <Header />
@@ -310,7 +355,7 @@ export default function Home() {
       />
 
       {playing && (
-        <Modal open={playing} onClose={() => setPlaying(false)}>
+        <Modal open={playing}>
           <Stack
             alignItems="center"
             justifyContent="center"
@@ -328,12 +373,18 @@ export default function Home() {
             <Typography variant="h5">
               Rendering video, please wait...
             </Typography>
-            <Box sx={{ width: "100%" }}>
-              <LinearProgressWithLabel
-                variant="determinate"
-                value={renderProgress}
-              />
-            </Box>
+            {renderProgress === 100 ? (
+              <Typography variant="body2">
+                Finalizing video, please wait...
+              </Typography>
+            ) : (
+              <Box sx={{ width: "100%" }}>
+                <LinearProgressWithLabel
+                  variant="determinate"
+                  value={renderProgress}
+                />
+              </Box>
+            )}
           </Stack>
         </Modal>
       )}
@@ -363,6 +414,11 @@ export default function Home() {
                 }}
               >
                 <ReactCrop
+                  aspect={
+                    mode === "single"
+                      ? imageDimensions.width / imageDimensions.height
+                      : undefined
+                  }
                   crop={cropType === "start" ? startCrop : endCrop}
                   onChange={(c) =>
                     cropType === "start" ? setStartCrop(c) : setEndCrop(c)
@@ -385,18 +441,29 @@ export default function Home() {
             <Stack spacing={5}>
               {!videoUrl && (
                 <Stack spacing={1}>
-                  <Typography variant="body1">How does it work?</Typography>
-                  <Typography variant="body2">
-                    1. Select the start and end crop areas of the image.
-                  </Typography>
+                  <Typography variant="h6">How does it work?</Typography>
+                  {mode === "single" ? (
+                    <Typography variant="body2">
+                      1. Draw the end crop area of the image.
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2">
+                      1. Draw the start and end crop areas of the image.
+                    </Typography>
+                  )}
                   <Typography variant="body2">
                     2. Set the duration of the effect.
                   </Typography>
                   <Typography variant="body2">
-                    3. Click on the "Apply" button.
+                    3. Click on the "Preview" button to see how the effect will
+                    look like.
                   </Typography>
                   <Typography variant="body2">
-                    4. Download the video or upload it to Wikimedia Commons.
+                    4. Once satisfied with the preview, click on the "Render"
+                    button to create the video.
+                  </Typography>
+                  <Typography variant="body2">
+                    5. Download the video or upload it to Wikimedia Commons.
                   </Typography>
                 </Stack>
               )}
@@ -411,62 +478,99 @@ export default function Home() {
                     muted
                   />
                 )}
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={
-                    isMobile
-                      ? {
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          rowGap: 3,
-                          justifyContent: "center",
-                        }
-                      : {}
-                  }
-                >
-                  <Box>
-                    <Button
-                      variant="contained"
-                      color={cropType === "start" ? "primary" : "inherit"}
-                      sx={{
-                        minWidth: 150,
-                      }}
-                      onClick={() => setCropType("start")}
-                      size="large"
-                    >
-                      Start crop
-                    </Button>
-                  </Box>
-                  <Box>
-                    <Button
-                      variant="contained"
-                      color={cropType === "end" ? "primary" : "inherit"}
-                      sx={{
-                        minWidth: 150,
-                      }}
-                      onClick={() => setCropType("end")}
-                      size="large"
-                    >
-                      End crop
-                    </Button>
-                  </Box>
-                  <Box>
-                    <TextField
-                      type="number"
-                      fullWidth
-                      label="duration (ms)"
-                      id="duration"
-                      value={duration}
-                      onChange={(e) => setDuration(parseInt(e.target.value))}
-                      size="small"
-                    />
-                    {duration <= 1000 && (
-                      <Typography variant="body2" color="error">
-                        Duration must be greater than 1000ms
-                      </Typography>
+                <Stack spacing={1}>
+                  <Typography variant="h6">Mode</Typography>
+                  <ButtonGroup>
+                    <Tooltip title="Animate starting from the full image to a specific position">
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color={mode === "single" ? "primary" : "inherit"}
+                        onClick={() => onModeChange("single")}
+                      >
+                        Single Crop
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="Animate starting from a specific position to the end crop">
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color={mode === "double" ? "primary" : "inherit"}
+                        onClick={() => onModeChange("double")}
+                      >
+                        Double Crop
+                      </Button>
+                    </Tooltip>
+                  </ButtonGroup>
+                </Stack>
+                <Stack spacing={1}>
+                  <Typography variant="h6">Settings</Typography>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={
+                      isMobile
+                        ? {
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            rowGap: 3,
+                            justifyContent: "center",
+                          }
+                        : {
+                            justifyContent:
+                              mode === "double"
+                                ? "space-between"
+                                : "flex-start",
+                          }
+                    }
+                  >
+                    {mode === "double" && (
+                      <>
+                        <Box>
+                          <Button
+                            variant="contained"
+                            color={cropType === "start" ? "primary" : "inherit"}
+                            sx={{
+                              minWidth: 150,
+                            }}
+                            onClick={() => setCropType("start")}
+                            size="large"
+                          >
+                            Start crop
+                          </Button>
+                        </Box>
+                        <Box>
+                          <Button
+                            variant="contained"
+                            color={cropType === "end" ? "primary" : "inherit"}
+                            sx={{
+                              minWidth: 150,
+                            }}
+                            onClick={() => setCropType("end")}
+                            size="large"
+                          >
+                            End crop
+                          </Button>
+                        </Box>
+                      </>
                     )}
-                  </Box>
+                    <Box>
+                      <TextField
+                        type="number"
+                        fullWidth
+                        label="duration (ms)"
+                        id="duration"
+                        value={duration}
+                        onChange={(e) => setDuration(parseInt(e.target.value))}
+                        size="small"
+                      />
+                      {duration <= 1000 && (
+                        <Typography variant="body2" color="error">
+                          Duration must be greater than 1000ms
+                        </Typography>
+                      )}
+                    </Box>
+                  </Stack>
                 </Stack>
                 <Stack
                   direction="row"
@@ -491,11 +595,10 @@ export default function Home() {
                       startIcon={<PlayArrowIcon />}
                       size="small"
                       disabled={
-                        !startCropConverted ||
+                        (!startCropConverted && mode === "double") ||
                         !endCropConverted ||
                         !duration ||
-                        duration < 1000 ||
-                        previewing
+                        duration < 1000
                       }
                     >
                       Preview
@@ -505,11 +608,11 @@ export default function Home() {
                     <Button
                       variant="contained"
                       color="success"
-                      onClick={onRender}
+                      onClick={mode == "single" ? onRenderFFmpeg : onRender}
                       size="small"
                       startIcon={<PlayArrowIcon />}
                       disabled={
-                        !startCropConverted ||
+                        (!startCropConverted && mode === "double") ||
                         !endCropConverted ||
                         !duration ||
                         duration < 1000 ||
