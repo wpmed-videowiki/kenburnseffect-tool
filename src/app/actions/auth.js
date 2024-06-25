@@ -24,7 +24,6 @@ export const getAppUser = async () => {
 export const logoutPlatform = async (platform) => {
   await connectDB();
   const userId = cookies().get("app-user-id");
-  console.log({userId})
   if (userId) {
     const user = await UserModel.findById(userId.value);
     if (user) {
@@ -34,7 +33,6 @@ export const logoutPlatform = async (platform) => {
         [`${platform}RefreshToken`]: null,
         [`${platform}Profile`]: {},
       };
-      console.log({update})
       await UserModel.findByIdAndUpdate(user._id, {
         $set: update,
       });

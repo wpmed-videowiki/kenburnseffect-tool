@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { searchCommonsImages } from "../actions/commons";
+import { useTranslations } from "next-intl";
 
 const {
   Stack,
@@ -16,6 +17,7 @@ const SearchForm = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [debouncedSearch] = useDebounce(search, 500);
+  const t = useTranslations();
 
   const router = useRouter();
 
@@ -38,9 +40,7 @@ const SearchForm = () => {
       <Autocomplete
         fullWidth
         id="search"
-        noOptionsText={
-          loading ? "Loading..." : "Paste the image url or file name here"
-        }
+        noOptionsText={loading ? t("SearchForm_loading") : t("SearchForm_paste_image_url")}
         inputValue={search}
         onInputChange={(e, value) => setSearch(value.trim() || "")}
         options={searchResults}
@@ -62,10 +62,7 @@ const SearchForm = () => {
         filterOptions={(x) => x}
         getOptionLabel={(option) => option.title}
         renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Search for images on Commons and NC Commons"
-          />
+          <TextField {...params} label={t("SearchForm_search_placeholder")} />
         )}
       />
     </Box>

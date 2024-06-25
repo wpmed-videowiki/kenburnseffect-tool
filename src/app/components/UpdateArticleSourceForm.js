@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Login } from "@mui/icons-material";
 import { popupCenter } from "../utils/popupTools";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 const UpdateArticleSourceForm = ({
   wikiSource,
@@ -13,6 +14,7 @@ const UpdateArticleSourceForm = ({
   fileName,
 }) => {
   const { data: session } = useSession();
+  const t = useTranslations();
 
   const [originalPageSource, setOriginalPageSource] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +38,7 @@ const UpdateArticleSourceForm = ({
     // update page source
     try {
       await updatePageSource(wikiSource, originalPageSource);
-      toast.success("Page source updated successfully");
+      toast.success(t("UpdateArticleSourceForm_update_success"));
     } catch (err) {
       console.log(err);
     }
@@ -53,7 +55,7 @@ const UpdateArticleSourceForm = ({
         return (
           <Stack spacing={2}>
             <Typography variant="body2">
-              Please sign in with Wikimedia to Update this article page
+              {t("UpdateArticleSourceForm_sing_in_to_wikimedia_to_update")}
             </Typography>
             <Button
               variant="contained"
@@ -64,7 +66,7 @@ const UpdateArticleSourceForm = ({
               startIcon={<Login />}
               onClick={() => popupCenter("/login?provider=wikimedia", "Login")}
             >
-              Login to Wikimedia
+              {t("UpdateArticleSourceForm_login_to_wikimedia")}
             </Button>
           </Stack>
         );
@@ -76,6 +78,7 @@ const UpdateArticleSourceForm = ({
           <Stack spacing={2}>
             <Typography variant="body2">
               Please sign in with MD Wiki to Update this article page
+              {t("UpdateArticleSourceForm_sing_in_to_mdwiki")}
             </Typography>
             <Button
               variant="contained"
@@ -86,7 +89,7 @@ const UpdateArticleSourceForm = ({
               startIcon={<Login />}
               onClick={() => popupCenter("/login?provider=mdwiki", "Login")}
             >
-              Login to MD Wiki
+              {t("UpdateArticleSourceForm_login_to_mdwiki")}
             </Button>
           </Stack>
         );
@@ -100,7 +103,9 @@ const UpdateArticleSourceForm = ({
     <>
       {originalPageSource && (
         <Box width="100%">
-          <Typography variant="body2">New page source</Typography>
+          <Typography variant="body2">
+            {t("UpdateArticleSourceForm_new_page_source")}
+          </Typography>
           <TextField
             maxRows={15}
             value={originalPageSource}
@@ -117,7 +122,9 @@ const UpdateArticleSourceForm = ({
               }}
               disabled={loading || !originalPageSource}
             >
-              {loading ? "Updating..." : "Update Page"}
+              {loading
+                ? t("UpdateArticleSourceForm_updating")
+                : t("UpdateArticleSourceForm_update_page")}
             </Button>
           </Stack>
         </Box>

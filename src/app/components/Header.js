@@ -1,9 +1,8 @@
-import { Login } from "@mui/icons-material";
+import { Language } from "@mui/icons-material";
 import {
   AppBar,
   Avatar,
   Box,
-  Button,
   IconButton,
   Menu,
   Stack,
@@ -12,17 +11,28 @@ import {
   Container,
   Tooltip,
   MenuItem,
+  Select,
 } from "@mui/material";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { popupCenter } from "../utils/popupTools";
 import { logoutPlatform } from "../actions/auth";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { SUPPORTED_LOCALE_LANGUAGES } from "../config/constants";
+import { setLocaleToCookies } from "../actions/locale";
 
 const Header = () => {
   const [anchorElUser, setAnchorElUser] = useState(null);
 
   const { data: session, update } = useSession();
+  const t = useTranslations();
+  const locale = useLocale();
+
+  const onLocaleChange = async (locale) => {
+    await setLocaleToCookies(locale);
+    window.location.reload();
+  };
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
@@ -67,7 +77,41 @@ const Header = () => {
           </Stack>
 
           <Box sx={{ flexGrow: 0 }}>
-            <Stack flexDirection="row" alignItems="center">
+            <Stack flexDirection="row" alignItems="center" gap={2}>
+              <Select
+                value={locale}
+                onChange={(e) => {
+                  console.log("e", e);
+                  onLocaleChange(e.target.value);
+                }}
+                size="small"
+                sx={{ color: "white" }}
+                renderValue={(value) => {
+                  const lang = SUPPORTED_LOCALE_LANGUAGES.find(
+                    (l) => l.code === value
+                  );
+                  if (!lang) {
+                    return <Language />;
+                  }
+                  return (
+                    <Stack
+                      justifyContent="center"
+                      alignItems="center"
+                      flexDirection="row"
+                      gap={1}
+                    >
+                      <Language />
+                      <Typography>{lang.name}</Typography>
+                    </Stack>
+                  );
+                }}
+              >
+                {SUPPORTED_LOCALE_LANGUAGES.map((lang) => (
+                  <MenuItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </MenuItem>
+                ))}
+              </Select>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <Avatar>{session?.user.name?.slice(0, 1)}</Avatar>
@@ -91,7 +135,9 @@ const Header = () => {
               >
                 {session?.user.wikimediaId ? (
                   <MenuItem onClick={() => logout("wikimedia")}>
-                    <Typography textAlign="center">Wikimedia Logout</Typography>
+                    <Typography textAlign="center">
+                      Wikimedia {t("logout")}
+                    </Typography>
                   </MenuItem>
                 ) : (
                   <MenuItem
@@ -99,13 +145,15 @@ const Header = () => {
                       popupCenter("/login?provider=wikimedia", "Login")
                     }
                   >
-                    <Typography textAlign="center">Wikimedia Login</Typography>
+                    <Typography textAlign="center">
+                      Wikimedia {t("login")}
+                    </Typography>
                   </MenuItem>
                 )}
                 {session?.user.nccommonsId ? (
                   <MenuItem onClick={() => logout("nccommons")}>
                     <Typography textAlign="center">
-                      NC Commons Logout
+                      NC Commons {t("logout")}
                     </Typography>
                   </MenuItem>
                 ) : (
@@ -114,12 +162,16 @@ const Header = () => {
                       popupCenter("/login?provider=nccommons", "Login")
                     }
                   >
-                    <Typography textAlign="center">NC Commons Login</Typography>
+                    <Typography textAlign="center">
+                      NC Commons {t("login")}
+                    </Typography>
                   </MenuItem>
                 )}
                 {session?.user.mdwikiId ? (
                   <MenuItem onClick={() => logout("mdwiki")}>
-                    <Typography textAlign="center">MD Wiki Logout</Typography>
+                    <Typography textAlign="center">
+                      MD Wiki {t("logout")}
+                    </Typography>
                   </MenuItem>
                 ) : (
                   <MenuItem
@@ -127,7 +179,9 @@ const Header = () => {
                       popupCenter("/login?provider=mdwiki", "Login")
                     }
                   >
-                    <Typography textAlign="center">MD Wiki Login</Typography>
+                    <Typography textAlign="center">
+                      MD Wiki {t("login")}
+                    </Typography>
                   </MenuItem>
                 )}
               </Menu>

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { popupCenter } from "../utils/popupTools";
 import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
+import { useTranslations } from "next-intl";
 
 const getWikiPageText = ({
   description,
@@ -44,6 +45,7 @@ const UploadForm = ({
   categories = [],
 }) => {
   const { data: session } = useSession();
+  const t = useTranslations();
 
   const fileTitleParts = title.split(".");
   fileTitleParts.pop();
@@ -119,7 +121,7 @@ const UploadForm = ({
         return (
           <Stack spacing={1}>
             <Typography variant="body2">
-              Please sign in with Wikimedia to upload this file.
+              {t("UploadForm_sign_in_to_upload_wikimedia")}
             </Typography>
             <Button
               variant="contained"
@@ -130,7 +132,7 @@ const UploadForm = ({
               startIcon={<UploadFile />}
               onClick={() => popupCenter("/login?provider=wikimedia", "Login")}
             >
-              Login to Wikimedia
+              {t("UploadForm_login_to_wikimedia")}
             </Button>
           </Stack>
         );
@@ -141,7 +143,7 @@ const UploadForm = ({
         return (
           <Stack spacing={1}>
             <Typography variant="body2">
-              Please sign in with NC Commons to upload this file.
+              {t("UploadForm_sign_in_to_upload_nccommons")}
             </Typography>
             <Button
               variant="contained"
@@ -152,7 +154,7 @@ const UploadForm = ({
               startIcon={<UploadFile />}
               onClick={() => popupCenter("/login?provider=nccommons", "Login")}
             >
-              Login to NC Commons
+              {t("UploadForm_login_to_nccommons")}
             </Button>
           </Stack>
         );
@@ -165,7 +167,7 @@ const UploadForm = ({
   return (
     <Stack direction="column" spacing={2}>
       <Stack spacing={1}>
-        <Typography variant="body2">File name</Typography>
+        <Typography variant="body2">{t("UploadForm_file_name")}</Typography>
         <TextField
           name="title"
           value={fileTitle}
@@ -178,13 +180,12 @@ const UploadForm = ({
         />
         {pageAlreadyExists && (
           <Typography variant="body2" color="orange">
-            File with this name already exists. Using this file name will
-            override the existing file.
+            {t("UploadForm_file_name_already_exists")}
           </Typography>
         )}
         {fileTitle.length >= 230 && (
           <Typography variant="body2" color="red">
-            File name is too long. It should be less than 240 characters.
+            {t("UploadForm_file_name_too_long")}
           </Typography>
         )}
       </Stack>
@@ -196,7 +197,7 @@ const UploadForm = ({
         >
           <Typography variant="body2">File Page source</Typography>
           <Button size="small" onClick={resetPageText}>
-            Reset
+            {t("UploadForm_reset")}
           </Button>
         </Stack>
         <TextField
@@ -219,10 +220,11 @@ const UploadForm = ({
           disabled={loading || disabled || fileTitle.length >= 230}
         >
           {loading
-            ? "Uploading..."
-            : `Upload to ${
-                provider === "nccommons" ? "NC Commons" : "Wikimedia Commons"
-              }`}
+            ? t("UploadForm_uploading")
+            : t("UploadForm_upload_to", {
+                destination:
+                  provider === "nccommons" ? "NC Commons" : "Wikimedia Commons",
+              })}
         </Button>
       </Stack>
     </Stack>

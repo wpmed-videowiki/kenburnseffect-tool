@@ -37,7 +37,7 @@ import { getAppUser } from "./actions/auth";
 import { renderVideo } from "./actions/render";
 import UpdateArticleSourceForm from "./components/UpdateArticleSourceForm";
 import LinearProgressWithLabel from "./components/LinearProgressWithLabel";
-import { Preview } from "@mui/icons-material";
+import { useTranslations } from "next-intl";
 
 const DEFAULT_IMAGE_WIDTH = 1280;
 const DEFAULT_IMAGE_HEIGHT = 720;
@@ -54,6 +54,7 @@ export default function Home() {
   const searchParams = useSearchParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const t = useTranslations();
 
   const [playing, setPlaying] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -370,13 +371,9 @@ export default function Home() {
               borderRadius: 2,
             }}
           >
-            <Typography variant="h5">
-              Rendering video, please wait...
-            </Typography>
+            <Typography variant="h5">{t("Index_rendering_video")}</Typography>
             {renderProgress === 100 ? (
-              <Typography variant="body2">
-                Finalizing video, please wait...
-              </Typography>
+              <Typography variant="body2">{t("Index_finalizing_video")}</Typography>
             ) : (
               <Box sx={{ width: "100%" }}>
                 <LinearProgressWithLabel
@@ -441,29 +438,27 @@ export default function Home() {
             <Stack spacing={5}>
               {!videoUrl && (
                 <Stack spacing={1}>
-                  <Typography variant="h6">How does it work?</Typography>
+                  <Typography variant="h6">{t("Index_how_it_works")}</Typography>
                   {mode === "single" ? (
                     <Typography variant="body2">
-                      1. Draw the end crop area of the image.
+                      {t("Index_draw_end_crop")}
                     </Typography>
                   ) : (
                     <Typography variant="body2">
-                      1. Draw the start and end crop areas of the image.
+                      {t("Index_draw_start_end_crops")}
                     </Typography>
                   )}
                   <Typography variant="body2">
-                    2. Set the duration of the effect.
+                    {t("Index_set_effect_duration")}
                   </Typography>
                   <Typography variant="body2">
-                    3. Click on the "Preview" button to see how the effect will
-                    look like.
+                    {t("Index_click_on_preview")}
                   </Typography>
                   <Typography variant="body2">
-                    4. Once satisfied with the preview, click on the "Render"
-                    button to create the video.
+                    {t("Index_click_on_render")}
                   </Typography>
                   <Typography variant="body2">
-                    5. Download the video or upload it to Wikimedia Commons.
+                    {t("Index_download_generated_video")}
                   </Typography>
                 </Stack>
               )}
@@ -479,7 +474,7 @@ export default function Home() {
                   />
                 )}
                 <Stack spacing={1}>
-                  <Typography variant="h6">Mode</Typography>
+                  <Typography variant="h6">{t("Index_mode")}</Typography>
                   <ButtonGroup>
                     <Tooltip title="Animate starting from the full image to a specific position">
                       <Button
@@ -488,7 +483,7 @@ export default function Home() {
                         color={mode === "single" ? "primary" : "inherit"}
                         onClick={() => onModeChange("single")}
                       >
-                        Single Crop
+                        {t("Index_mode_single_crop")}
                       </Button>
                     </Tooltip>
                     <Tooltip title="Animate starting from a specific position to the end crop">
@@ -498,13 +493,13 @@ export default function Home() {
                         color={mode === "double" ? "primary" : "inherit"}
                         onClick={() => onModeChange("double")}
                       >
-                        Double Crop
+                        {t("Index_mode_double_crop")}
                       </Button>
                     </Tooltip>
                   </ButtonGroup>
                 </Stack>
                 <Stack spacing={1}>
-                  <Typography variant="h6">Settings</Typography>
+                  <Typography variant="h6">{t("Index_settings")}</Typography>
                   <Stack
                     direction="row"
                     spacing={2}
@@ -536,7 +531,7 @@ export default function Home() {
                             onClick={() => setCropType("start")}
                             size="large"
                           >
-                            Start crop
+                            {t("Index_start_crop")}
                           </Button>
                         </Box>
                         <Box>
@@ -549,7 +544,7 @@ export default function Home() {
                             onClick={() => setCropType("end")}
                             size="large"
                           >
-                            End crop
+                            {t("Index_end_crop")}
                           </Button>
                         </Box>
                       </>
@@ -566,12 +561,12 @@ export default function Home() {
                       />
                       {duration <= 1000 && (
                         <Typography variant="body2" color="error">
-                          Duration must be greater than 1000ms
+                          {t("Index_duration_small_error")}
                         </Typography>
                       )}
                       {duration > 15000 && (
                         <Typography variant="body2" color="error">
-                          Duration should be less than 15000ms
+                          {t("Index_duration_large_error")}
                         </Typography>
                       )}
                     </Box>
@@ -609,7 +604,7 @@ export default function Home() {
                         previewing
                       }
                     >
-                      Preview
+                      {t("Index_preview")}
                     </Button>
                   </Box>
                   <Box>
@@ -625,11 +620,11 @@ export default function Home() {
                         !duration ||
                         duration < 1000 ||
                         duration > 15000 ||
-                        playing || 
+                        playing ||
                         previewing
                       }
                     >
-                      Render
+                      {t("Index_render")}
                     </Button>
                   </Box>
                   <Box>
@@ -641,7 +636,7 @@ export default function Home() {
                           size="small"
                           startIcon={<DownloadIcon />}
                         >
-                          Download
+                          {t("Index_download")}
                         </Button>
                       </a>
                     )}
@@ -680,7 +675,7 @@ export default function Home() {
                   spacing={2}
                 >
                   <a href={uploadedUrl} target="_blank" rel="noreferrer">
-                    View on Commons
+                    {t('view_on_commons')}
                   </a>
                   {searchParams.get("wikiSource") && (
                     <>
@@ -689,7 +684,7 @@ export default function Home() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        View Original Page
+                        {t('view_original_page')}
                       </a>
                       <UpdateArticleSourceForm
                         wikiSource={searchParams.get("wikiSource")}
