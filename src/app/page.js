@@ -675,7 +675,7 @@ export default function Home() {
                   spacing={2}
                 >
                   <a href={uploadedUrl} target="_blank" rel="noreferrer">
-                    {t('view_on_commons')}
+                    {t('Index_view_on_commons')}
                   </a>
                   {searchParams.get("wikiSource") && (
                     <>
@@ -684,7 +684,7 @@ export default function Home() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        {t('view_original_page')}
+                        {t('Index_view_original_page')}
                       </a>
                       <UpdateArticleSourceForm
                         wikiSource={searchParams.get("wikiSource")}
