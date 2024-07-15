@@ -8,7 +8,7 @@ import { NextIntlClientProvider } from "next-intl";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Ken Burns Effect Tool",
+  title: "VideoWiki: Ken Burns Effect Tool",
   description:
     "A tool to create Ken Burns effect videos from static images on Wikimedia Commons and NC Commons.",
 };
