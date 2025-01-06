@@ -16,7 +16,7 @@
     "bezier-easing": "^2.1.0",
     "kenburns": "^2.0.3",
     "mongoose": "^8.8.3",
-    "next": "14.2.3",
+    "next": "14.2.22",
     "next-auth": "^4.24.7",
     "next-intl": "^3.15.2",
     "node-fetch": "^3.3.2",
