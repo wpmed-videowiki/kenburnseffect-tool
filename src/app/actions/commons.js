@@ -61,7 +61,7 @@ export const fetchPageSource = async (wikiSource) => {
   const baseUrl = wikiSource.split("/wiki/")[0];
   const title = wikiSource.split("/wiki/")[1];
 
-  const sourceUrl = `${baseUrl}/w/api.php?action=query&titles=${encodeURIComponent(
+  const sourceUrl = `${baseUrl}/w/api.php?action=query&titles=${decodeURIComponent(
     title
   )}&prop=revisions&rvprop=content&format=json&formatversion=2`;
 
