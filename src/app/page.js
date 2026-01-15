@@ -506,17 +506,17 @@ export default function Home() {
                     sx={
                       isMobile
                         ? {
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                            rowGap: 3,
-                            justifyContent: "center",
-                          }
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          rowGap: 3,
+                          justifyContent: "center",
+                        }
                         : {
-                            justifyContent:
-                              mode === "double"
-                                ? "space-between"
-                                : "flex-start",
-                          }
+                          justifyContent:
+                            mode === "double"
+                              ? "space-between"
+                              : "flex-start",
+                        }
                     }
                   >
                     {mode === "double" && (
@@ -579,11 +579,11 @@ export default function Home() {
                   sx={
                     isMobile
                       ? {
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          rowGap: 3,
-                          justifyContent: "center",
-                        }
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        rowGap: 3,
+                        justifyContent: "center",
+                      }
                       : {}
                   }
                 >
