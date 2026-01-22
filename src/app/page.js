@@ -10,7 +10,7 @@ import {
   Stack,
   TextField,
   Box,
-  Grid,
+  GridLegacy as Grid,
   Typography,
   Container,
   Modal,
@@ -421,15 +421,16 @@ export default function Home() {
                     cropType === "start" ? setStartCrop(c) : setEndCrop(c)
                   }
                 >
-                  <img
-                    src={imageUrl}
-                    style={{
-                      width: imageDimensions.width,
-                      height: imageDimensions.height,
-                    }}
-                    ref={imageRef}
-                    alt=""
-                  />
+                  {imageUrl && (
+                    <img src={imageUrl}
+                      style={{
+                        width: imageDimensions.width,
+                        height: imageDimensions.height,
+                      }}
+                      ref={imageRef}
+                      alt=""
+                    />
+                  )}
                 </ReactCrop>
               </Box>
             </Stack>
